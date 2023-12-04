@@ -1,0 +1,13 @@
+# Node.js
+node_modules/
+
+# Dependency directories
+yarn-error.log
+npm-debug.log
+
+# Local environment variables
+.env
+
+# Dependency lock files
+yarn.lock
+package-lock.json
