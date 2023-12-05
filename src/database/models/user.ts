@@ -1,6 +1,6 @@
 import mongoose,{Schema,Document} from "mongoose";
 interface IUser extends Document{
-    userId:string;
+    userId:number;
     userName:string;
     wallets:{
         address:string;
@@ -12,7 +12,7 @@ interface IUser extends Document{
 }
 const UserSchema:Schema = new Schema({
     userId:{
-        type:String,
+        type:Number,
         required:true,
         unique:true
     },
@@ -28,4 +28,4 @@ const UserSchema:Schema = new Schema({
     nativeBalance:{type:Number,default:0},
     c98Balance:{type:Number,default:0}
 });
-export const User = mongoose.model<IUser>("User",UserSchema);
+export const userModel = mongoose.model<IUser>("user",UserSchema);

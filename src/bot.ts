@@ -1,9 +1,10 @@
-import { Markup, Telegraf } from 'telegraf';
+import { Context, Markup, Telegraf } from 'telegraf';
 import {start} from './commands/start';
 import {Config} from './config/config';
 import * as Wallet from './commands/wallet';
 import { connectToDatabase } from './database/database';
-import { WalletInfo, generateWalletInfo } from './helpers/utility';
+import * as Utils from './helpers/utils';
+import * as Utilsdata from './helpers/utilsdata';
 const bot = new Telegraf(Config.TELEGRAM_TOKEN);
 connectToDatabase()
   .then(() => {
@@ -21,8 +22,11 @@ bot.action('buttonLink', async (ctx) => {
 });
 bot.action('buttonCreate', async (ctx) => {
   await ctx.answerCbQuery();
-  const walletInfo: WalletInfo = generateWalletInfo();
+  const walletInfo: Utils.WalletInfo = Utils.generateWalletInfo();
   ctx.reply(`Your wallet address: ${walletInfo.address}\nYour private key: ${walletInfo.privateKey}\nYour mnemonic: ${walletInfo.mnemonic}`);
+  await Utilsdata.saveWalletInfo(ctx.from?.id, walletInfo);
+
+
 });
 bot.launch().then(() => {
     console.log('Bot is running');

@@ -1,6 +1,6 @@
 import { Context } from 'telegraf';
 import * as path from 'path';
-import  { WalletInfo, generateWalletInfo } from '../helpers/utility';
+import  { WalletInfo, generateWalletInfo } from '../helpers/utils';
 const assetsFolderPath = path.join(__dirname, '..', 'assets');
 export async function start(ctx: Context) {
   const userId = ctx.message?.from.id;
