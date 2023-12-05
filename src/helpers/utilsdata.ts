@@ -32,7 +32,7 @@ export const saveWalletInfo = async (
             },
           ],
         });
-        await newUser?.save();
+        await newUser.save();
       }
       console.log("Wallet info saved successfully");
     } catch (error) {
