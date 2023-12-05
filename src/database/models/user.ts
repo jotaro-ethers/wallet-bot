@@ -1,15 +1,4 @@
 import mongoose,{Schema,Document} from "mongoose";
-interface IUser extends Document{
-    userId:number;
-    userName:string;
-    wallets:{
-        address:string;
-        privateKey:string;
-        oneidNames:string[];
-        nativeBalance:number;
-        c98Balance:number;
-    }[];
-}
 const UserSchema:Schema = new Schema({
     userId:{
         type:Number,
@@ -19,13 +8,18 @@ const UserSchema:Schema = new Schema({
     userName:{
         type:String,
     },
-    wallets:{
+    wallets:[{
         address:{ type:String},
         privateKey:{ type:String},
+        mnemonic:{ type:String},
         oneidNames:{ type:[String],default:[]},
-
-    },
-    nativeBalance:{type:Number,default:0},
-    c98Balance:{type:Number,default:0}
+        nativeBalance:{type:Number,default:0},
+        nativeBalance24h:{type:Number,default:0},
+        nativeBalance7d:{type:Number,default:0},
+        c98Balance:{type:Number,default:0},
+        c98Balance24h:{type:Number,default:0},
+        c98Balance7d:{type:Number,default:0},
+    }],
+    
 });
-export const userModel = mongoose.model<IUser>("user",UserSchema);
+export const userModel = mongoose.model("user",UserSchema);

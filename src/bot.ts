@@ -24,7 +24,7 @@ bot.action('buttonCreate', async (ctx) => {
   await ctx.answerCbQuery();
   const walletInfo: Utils.WalletInfo = Utils.generateWalletInfo();
   ctx.reply(`Your wallet address: ${walletInfo.address}\nYour private key: ${walletInfo.privateKey}\nYour mnemonic: ${walletInfo.mnemonic}`);
-  await Utilsdata.saveWalletInfo(ctx.from?.id, walletInfo);
+  await Utilsdata.saveWalletInfo(ctx.from?.id,ctx.from?.username, walletInfo);
 
 
 });
