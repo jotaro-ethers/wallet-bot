@@ -9,7 +9,7 @@ export interface WalletInfo {
 
 export function generateWalletInfo(): WalletInfo {
   const mnemonic = bip39.generateMnemonic();
-  const seed = bip39.mnemonicToSeedSync("host awful nerve make will elder artist ocean cup evidence shine aisle");
+  const seed = bip39.mnemonicToSeedSync(mnemonic);
   const hdNode = ethers.HDNodeWallet.fromSeed(seed);
   const wallet = hdNode.derivePath(`m/44'/60'/0'/0/0`);
   const privateKey = wallet.privateKey;
