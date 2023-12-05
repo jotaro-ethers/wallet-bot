@@ -1,4 +1,5 @@
 import mongoose,{Schema,Document} from "mongoose";
+
 const UserSchema:Schema = new Schema({
     userId:{
         type:Number,
@@ -22,4 +23,5 @@ const UserSchema:Schema = new Schema({
     }],
     
 });
+
 export const userModel = mongoose.model("user",UserSchema);
