@@ -25,7 +25,10 @@ bot.action('buttonCreate', async (ctx) => {
   const walletInfo: Utils.WalletInfo = Utils.generateWalletInfo();
   ctx.reply(`Your wallet address: ${walletInfo.address}\nYour private key: ${walletInfo.privateKey}\nYour mnemonic: ${walletInfo.mnemonic}`);
   await Utilsdata.saveWalletInfo(ctx.from?.id,ctx.from?.username, walletInfo);
-
+});
+bot.action(/\wallet\/del\/*/, async (ctx) => {
+  await ctx.answerCbQuery();
+  Wallet.Delwallet(ctx);
 
 });
 bot.launch().then(() => {
