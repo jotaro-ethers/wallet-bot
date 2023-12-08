@@ -51,7 +51,11 @@ bot.action('get', async (ctx)=>{
   state = "get"
 })
 
+bot.action(/\wallet\/del\/*/, async (ctx) => {
+  await ctx.answerCbQuery();
+  Wallet.Delwallet(ctx);
 
+});
 bot.use(async (ctx,next)=>{
   if( state == "getBalance"){
     const {balance, err} = await Utilsdata.getBalance(ctx);
