@@ -34,9 +34,7 @@ export async function Delwallet(ctx: Context){
         utilsdata.deleteWallet(userId,extractedData);
         ctx.reply('Deleted wallet: ' + extractedData);
 
-    }else {
+    }else{
     console.error('Callback query is undefined');
   }
-
-
 }

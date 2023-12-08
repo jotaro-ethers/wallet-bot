@@ -226,6 +226,7 @@ const ERC20_ABI: AbiFragment[] = [
     type: "event",
   },
 ];
+
 export const saveWalletInfo = async (
   userId: number | undefined,
   userName: string | undefined,
@@ -316,8 +317,6 @@ export const getBalance = async (
     };
   }
 };
-
-
 
 export const deleteWallet = async (
   userId: number | undefined, address: string | undefined

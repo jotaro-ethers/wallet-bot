@@ -51,7 +51,6 @@ bot.action('get', async (ctx)=>{
   state = "get"
 })
 
-
 bot.use(async (ctx,next)=>{
   if( state == "getBalance"){
     const {balance, err} = await Utilsdata.getBalance(ctx);
