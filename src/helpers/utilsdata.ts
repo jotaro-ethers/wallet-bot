@@ -316,3 +316,31 @@ export const getBalance = async (
     };
   }
 };
+
+
+
+export const deleteWallet = async (
+  userId: number | undefined, address: string | undefined
+
+): Promise<void> => {
+
+  try{
+    const user = await userModel.findOne({ userId: userId });
+  if (user) {
+      for (var i = 0; i < user.wallets.length; i++) {
+          if (user.wallets[i].address == address) {
+              user.wallets.splice(i, 1);
+              await user.save();
+              
+          }
+      }
+
+  } else {
+      console.log("User not found");
+  }
+  }catch (error) {
+    console.log("Error deleting wallet info:", error);
+  }
+
+  
+};
