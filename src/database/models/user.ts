@@ -14,12 +14,6 @@ const UserSchema:Schema = new Schema({
         privateKey:{ type:String},
         mnemonic:{ type:String},
         oneidNames:{ type:[String],default:[]},
-        nativeBalance:{type:Number,default:0},
-        nativeBalance24h:{type:Number,default:0},
-        nativeBalance7d:{type:Number,default:0},
-        c98Balance:{type:Number,default:0},
-        c98Balance24h:{type:Number,default:0},
-        c98Balance7d:{type:Number,default:0},
     }],
     
 });

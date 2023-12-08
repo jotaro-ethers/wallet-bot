@@ -1,6 +1,9 @@
 import * as bip39 from 'bip39';
 import { ethers } from 'ethers';
 import { userModel } from '../database/models/user';
+import { Context } from 'telegraf';
+import {getBalance} from "./utilsdata"
+import { Update } from 'telegraf/typings/core/types/typegram';
 
 export interface WalletInfo {
   mnemonic: string;
@@ -22,5 +25,3 @@ export function generateWalletInfo(): WalletInfo {
     address,
   };
 }
-
-
