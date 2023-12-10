@@ -66,7 +66,7 @@ export async function trackWallet(ctx: Context){
             }
         }
         htmlText+=`💰Total Balance: ${totalRemain} USD</pre>\n`
-        htmlText+=`<i>⌚️-------${timeFormatted}-------⌚️\n ℹ️ The bot only displays the top tokens that have been verified by Vicscan </i>\n📢 VictelPay - Advertise with us @jotaro_ne\n🔎 View your wallet on explore <a href="https://vicscan.xyz/address/${extractedData}">👇</a>\n`
+        htmlText+=`<i>⌚️-------${timeFormatted}-------⌚️\n ℹ️ The bot only displays the top tokens that have been verified by Vicscan </i>\n📢 VictelPay - Advertise with us @jotaro_ne\n🔎 View your wallet on explorer <a href="https://vicscan.xyz/address/${extractedData}">👇</a>\n`
 
         await ctx.telegram.editMessageText(
             ctx.chat?.id,
