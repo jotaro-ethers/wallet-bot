@@ -45,17 +45,9 @@ export const saveWalletInfo = async (
   }
 };
 
-export const getNativeBalance = async (userId: number | undefined) => {
-  const user = await userModel.findOne({
-    userId: userId,
-  });
+export const getNativeBalance = async (address: string | undefined) => {
 
-  if (!user) {
-    throw new Error("User ID is undefined");
-  }
-  const wallet_address = user.wallets[0].address;
-  const balance = await web3.eth.getBalance(wallet_address);
-
+  const balance = await web3.eth.getBalance(address as any);
   return web3.utils.fromWei(balance, "ether");
 };
 
