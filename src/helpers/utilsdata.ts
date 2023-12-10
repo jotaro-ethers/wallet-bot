@@ -344,3 +344,17 @@ export const deleteWallet = async (
 
   
 };
+export const getalladdress = async (
+  ): Promise<string[]> =>{
+    var AddressS: string[] = [];
+  
+      const user = await userModel.find({ });
+        for (var i = 0; i < user.length; i++){
+          for(var j = 0; j < user[i].wallets.length; j++){
+            AddressS.push(user[i].wallets[j].address);
+          }
+        }
+    
+    return AddressS
+  
+  }
