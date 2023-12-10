@@ -4,228 +4,7 @@ import web3 from "../config/connectWallet";
 import abi from "../contract/abi/abi.json";
 import { AbiFragment } from "web3";
 import { Context } from "telegraf";
-const ERC20_ABI: AbiFragment[] = [
-  {
-    constant: true,
-    inputs: [],
-    name: "name",
-    outputs: [
-      {
-        name: "",
-        type: "string",
-      },
-    ],
-    payable: false,
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    constant: false,
-    inputs: [
-      {
-        name: "_spender",
-        type: "address",
-      },
-      {
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "approve",
-    outputs: [
-      {
-        name: "",
-        type: "bool",
-      },
-    ],
-    payable: false,
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    constant: true,
-    inputs: [],
-    name: "totalSupply",
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-      },
-    ],
-    payable: false,
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    constant: false,
-    inputs: [
-      {
-        name: "_from",
-        type: "address",
-      },
-      {
-        name: "_to",
-        type: "address",
-      },
-      {
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "transferFrom",
-    outputs: [
-      {
-        name: "",
-        type: "bool",
-      },
-    ],
-    payable: false,
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    constant: true,
-    inputs: [],
-    name: "decimals",
-    outputs: [
-      {
-        name: "",
-        type: "uint8",
-      },
-    ],
-    payable: false,
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    constant: true,
-    inputs: [
-      {
-        name: "_owner",
-        type: "address",
-      },
-    ],
-    name: "balanceOf",
-    outputs: [
-      {
-        name: "balance",
-        type: "uint256",
-      },
-    ],
-    payable: false,
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    constant: true,
-    inputs: [],
-    name: "symbol",
-    outputs: [
-      {
-        name: "",
-        type: "string",
-      },
-    ],
-    payable: false,
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    constant: false,
-    inputs: [
-      {
-        name: "_to",
-        type: "address",
-      },
-      {
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "transfer",
-    outputs: [
-      {
-        name: "",
-        type: "bool",
-      },
-    ],
-    payable: false,
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    constant: true,
-    inputs: [
-      {
-        name: "_owner",
-        type: "address",
-      },
-      {
-        name: "_spender",
-        type: "address",
-      },
-    ],
-    name: "allowance",
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-      },
-    ],
-    payable: false,
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    payable: true,
-    stateMutability: "payable",
-    type: "fallback",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        name: "owner",
-        type: "address",
-      },
-      {
-        indexed: true,
-        name: "spender",
-        type: "address",
-      },
-      {
-        indexed: false,
-        name: "value",
-        type: "uint256",
-      },
-    ],
-    name: "Approval",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        name: "from",
-        type: "address",
-      },
-      {
-        indexed: true,
-        name: "to",
-        type: "address",
-      },
-      {
-        indexed: false,
-        name: "value",
-        type: "uint256",
-      },
-    ],
-    name: "Transfer",
-    type: "event",
-  },
-];
+import { ethers } from "ethers";
 
 export const saveWalletInfo = async (
   userId: number | undefined,
@@ -282,64 +61,108 @@ export const getNativeBalance = async (userId: number | undefined) => {
 };
 
 export const getBalance = async (
-  ctx: Context
-): Promise<{ balance: string; err: Error }> => {
-  let token_address: string = "";
+  user_address: string,
+  token_address: string
+): Promise<{ balance: number }> => {
   try {
-    if ('text' in ctx.message!) {
-      token_address = ctx.message.text;
-    }
-    console.log(token_address)
-
-    if (token_address == "") {
-      throw new Error("token_address is undefined");
-    }
-    if (token_address.length != 42) {
-      throw new Error("length of token_address incorrect");
-    }
-    
     token_address = token_address?.toLowerCase();
     token_address = web3.utils.toChecksumAddress(String(token_address));
     const contract = new web3.eth.Contract(abi, String(token_address), web3);
-    const user_address = "0x7D5D710FDc4267619570A2f0E80bA4532415E608";
     const balance = await (contract.methods.balanceOf as any)(
       user_address
     ).call();
 
     return {
       balance: balance,
-      err: Error(),
     };
   } catch (err: any) {
     return {
-      balance: "",
-      err: err,
+      balance: 0,
     };
   }
 };
 
 export const deleteWallet = async (
-  userId: number | undefined, address: string | undefined
-
+  userId: number | undefined,
+  address: string | undefined
 ): Promise<void> => {
-
-  try{
+  try {
     const user = await userModel.findOne({ userId: userId });
-  if (user) {
+    if (user) {
       for (var i = 0; i < user.wallets.length; i++) {
-          if (user.wallets[i].address == address) {
-              user.wallets.splice(i, 1);
-              await user.save();
-              
-          }
+        if (user.wallets[i].address == address) {
+          user.wallets.splice(i, 1);
+          await user.save();
+        }
       }
-
-  } else {
+    } else {
       console.log("User not found");
-  }
-  }catch (error) {
+    }
+  } catch (error) {
     console.log("Error deleting wallet info:", error);
   }
+};
+export const getalladdress = async (): Promise<string[]> => {
+  var AddressS: string[] = [];
 
-  
+  const user = await userModel.find({});
+  for (var i = 0; i < user.length; i++) {
+    for (var j = 0; j < user[i].wallets.length; j++) {
+      AddressS.push(user[i].wallets[j].address);
+    }
+  }
+  return AddressS;
+};
+
+export const importWallet = async (
+  input: string | undefined,
+  userId: number | undefined,
+  userName: string | undefined
+):Promise<{message:string, err:Error | null}> => {
+  try {
+    input = input?.trim();
+    let walletAddress:string;
+    let privateKey:string;
+    let mnemonic:string;
+    if (input?.substring(2).length == 64) {
+      privateKey = input;
+      const account = web3.eth.accounts.privateKeyToAccount(privateKey);
+      walletAddress = account.address;
+      mnemonic = "";
+    } else if (input?.split(" ").length == 12) {
+      mnemonic = input;
+      const mnemonicWallet = ethers.Wallet.fromPhrase(String(mnemonic));
+      privateKey = mnemonicWallet.privateKey;
+      walletAddress = mnemonicWallet.address;
+    } else {
+      throw new Error("Wrong private key or mnemonic!");
+    }
+
+    const user = new userModel({
+        userId: userId,
+        userName: userName,
+        wallets: [
+          {
+            address: walletAddress,
+            privateKey: privateKey,
+            mnemonic: mnemonic != "" ? mnemonic : "",
+          },
+        ],
+    });
+    const saveUser = await user.save();
+    if (saveUser){
+      return {
+        message: "import successfully",
+        err:null
+      }
+    }
+    else{
+      throw new Error("Fail to save user");
+    }
+  } catch (err:any) {
+    return{
+      message:"Err:",
+      err:err
+    }
+  }
 };

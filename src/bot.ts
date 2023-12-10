@@ -6,11 +6,13 @@ import * as Wallet from './commands/wallet';
 import { connectToDatabase } from './database/database';
 import * as Utils from './helpers/utils';
 import * as Utilsdata from './helpers/utilsdata';
-
+import {handleMessage,setState} from './handlemessage';
 const bot = new Telegraf(Config.TELEGRAM_TOKEN);
+console.log('Bot is starting');
 
-let state:string;
 
+const EventEmitter = require('events');
+EventEmitter.defaultMaxListeners = 100;
 connectToDatabase()
   .then(() => {
   })
@@ -26,56 +28,37 @@ bot.action('buttonLink', async (ctx) => {
   await ctx.answerCbQuery();
   const buttonCreate = Markup.button.callback('Create new wallet', 'buttonCreate');
   const buttonImport = Markup.button.callback('Import wallet', 'buttonImport');
-  const buttonGetBalance = Markup.button.callback('Get balance', 'getBalance');
-  const button = Markup.button.callback('Get', 'get');
-  ctx.reply('Wallet Menu:', Markup.inlineKeyboard([[buttonCreate, buttonImport],[buttonGetBalance, button]]));
+  ctx.reply('Start your crypto journey with a new wallet or import an existing one', Markup.inlineKeyboard([buttonCreate, buttonImport]));
 });
 
 bot.action('buttonCreate', async (ctx) => {
- 
   await ctx.answerCbQuery();
   const walletInfo: Utils.WalletInfo = Utils.generateWalletInfo();
   ctx.reply(`Your wallet address: ${walletInfo.address}\nYour private key: ${walletInfo.privateKey}\nYour mnemonic: ${walletInfo.mnemonic}`);
   await Utilsdata.saveWalletInfo(ctx.from?.id,ctx.from?.username, walletInfo);
 });
 
-
-
-bot.action('getBalance', async (ctx)=>{
-  state = "getBalance"
-  await ctx.answerCbQuery();
-  ctx.reply("please input the token address: ")
-})
-
-bot.action('get', async (ctx)=>{
-  state = "get"
-})
-
 bot.action(/\wallet\/del\/*/, async (ctx) => {
   await ctx.answerCbQuery();
   Wallet.Delwallet(ctx);
 
 });
-bot.use(async (ctx,next)=>{
-  if( state == "getBalance"){
-    const {balance, err} = await Utilsdata.getBalance(ctx);
-    if (err instanceof Error && err.message != ""){
-      ctx.reply(err.message)
-      return
-    }
-    else{
-      console.log(balance)
-      ctx.reply(`your balance is ${balance}`)
-    }
-    state = "\0"
-  }
-  else{
-    next()
-  }
+
+bot.action(/\wallet\/\/*/, async (ctx) => {
+  await ctx.answerCbQuery();
+  Wallet.trackWallet(ctx);
+});
+
+bot.action("buttonImport",async(ctx)=>{
+  await ctx.answerCbQuery();
+  ctx.reply("import walletaddress or mnemonic: ");
+  setState("importWallet"); 
 })
+
+bot.use(handleMessage())
 
 bot.launch().then(() => {
     console.log('Bot is running');
-  }).catch((err) => {
+}).catch((err) => {
     console.error('Error starting bot:', err);
-  });
+});
