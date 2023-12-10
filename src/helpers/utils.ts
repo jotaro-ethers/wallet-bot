@@ -38,7 +38,7 @@ export async function trackWallet(address = "0x1db6Ad727aE60d7b4dBee81f79C4bCbCf
   try {
     var tokens = [];
     var totalRemain = 0;
-    address = "0x1db6Ad727aE60d7b4dBee81f79C4bCbCfF8759F8"
+    address = "0x0A8484C8e45295d78Eb4D8922690c326A3473bbe"
     const response: AxiosResponse = await axios.get('https://tomoscan.io/api/token/list?offset=0&limit=14');
     const data = response.data.data;
     for (const element of data) {
