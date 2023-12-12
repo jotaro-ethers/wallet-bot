@@ -6,7 +6,10 @@ import * as utils from "../helpers/utils";
 import * as path from "path";
 import dayjs from "dayjs";
 import "dayjs/locale/en";
+import {action} from "../bot"
+
 const assetsFolderPath = path.join(__dirname, "..", "assets");
+
 export async function wallet(ctx: Context) {
   const buttonLink = Markup.button.callback("Link wallet", "buttonLink");
   var ButtonsWallets = [[buttonLink]];
@@ -36,14 +39,36 @@ export async function wallet(ctx: Context) {
 }
 
 export async function Delwallet(ctx: Context) {
+  const confirmButton = Markup.button.callback("Confirm","agreeButton")
+  const delineButton = Markup.button.callback("Deny","denyButton")
+  
   const data = (ctx.callbackQuery as any)?.data;
   console.log(data);
   if (data) {
     const prefix = "wallet/del/";
     const extractedData = data.substring(prefix.length);
     const userId = ctx.from?.id;
-    utilsdata.deleteWallet(userId, extractedData);
-    ctx.reply("Deleted wallet: " + extractedData);
+
+    const denybuttonCallBack = async (ctx:Context)=>{
+      await ctx.answerCbQuery();
+      wallet(ctx);
+    }
+    
+    const agreebuttonCallBack = async(ctx:Context)=>{
+      await ctx.answerCbQuery();
+      utilsdata.deleteWallet(userId, extractedData);
+      ctx.reply("Deleted wallet: " + extractedData);
+    }  
+
+    await ctx.reply("Do you really want to delete it ?",{
+      reply_markup:{
+        inline_keyboard:[[confirmButton, delineButton]]
+      }
+    })
+
+    await action.setButton("agreeButton", agreebuttonCallBack);
+    await action.setButton("denyButton", denybuttonCallBack)
+
   } else {
     console.error("Callback query is undefined");
   }

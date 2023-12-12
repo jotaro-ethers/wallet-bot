@@ -1,17 +1,21 @@
 import { Context, Markup, Telegraf,session}from 'telegraf';
- 
-import {start} from './commands/start';
 import {Config} from './config/config';
-import * as Wallet from './commands/wallet';
+import Action from './commands/action';
+import {start} from './commands/start';
 import { connectToDatabase } from './database/database';
 import * as Utils from './helpers/utils';
 import * as Utilsdata from './helpers/utilsdata';
-import {agreebuttonCallBack, denybuttonCallBack, handleMessage,setState} from './handlemessage';
-const bot = new Telegraf(Config.TELEGRAM_TOKEN);
+import {handleMessage,setState} from './handlemessage';
+import * as Wallet from './commands/wallet';
+
 console.log('Bot is starting');
-
-
 const EventEmitter = require('events');
+
+const bot = new Telegraf(Config.TELEGRAM_TOKEN);
+
+export const action = new Action(bot);
+
+
 EventEmitter.defaultMaxListeners = 100;
 connectToDatabase()
   .then(() => {
@@ -41,7 +45,6 @@ bot.action('buttonCreate', async (ctx) => {
 bot.action(/\wallet\/del\/*/, async (ctx) => {
   await ctx.answerCbQuery();
   Wallet.Delwallet(ctx);
-
 });
 
 bot.action(/\wallet\/\/*/, async (ctx) => {
@@ -51,12 +54,12 @@ bot.action(/\wallet\/\/*/, async (ctx) => {
 
 bot.action("buttonImport",async(ctx)=>{
   await ctx.answerCbQuery();
+  if ('data' in ctx.callbackQuery){
+    console.log(ctx.callbackQuery.data)
+  }
   ctx.reply("import private key or mnemonic: ");
   setState("importWallet");
 })
-
-bot.action("agreeButton", agreebuttonCallBack);
-bot.action("denyButton", denybuttonCallBack);
 
 bot.use(handleMessage())
 

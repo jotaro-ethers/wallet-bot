@@ -2,7 +2,7 @@ import { Context, Markup } from "telegraf";
 import { importWallet } from "./helpers/utilsdata";
 import { createTextChangeRange } from "typescript";
 import { wallet } from "./commands/wallet";
-
+import {action} from "./bot"
 
 let state:string;
 export function setState(newState:string) {
@@ -10,7 +10,6 @@ export function setState(newState:string) {
 }
 
 export function handleMessage(){
-
   return async (ctx: Context, next: () => Promise<void>) => {
 
     const agreeButton = Markup.button.callback("Yes","agreeButton")
@@ -29,6 +28,18 @@ export function handleMessage(){
         state = "\0";
       }
       else{
+        const denybuttonCallBack = async (ctx:Context)=>{
+          await ctx.answerCbQuery();
+          setState("\0");
+          await wallet(ctx);
+        }
+        
+        const agreebuttonCallBack = async(ctx:Context)=>{
+          await ctx.answerCbQuery();
+          ctx.reply("import private key or mnemonic: ")
+          setState("importWallet")
+        }
+
         state = "\0";
         await ctx.reply(err.message)
         await ctx.reply("Would you like to enter again ?", {
@@ -36,6 +47,8 @@ export function handleMessage(){
             inline_keyboard:[[agreeButton, delineButton]]
           },
         });
+        await action.setButton("agreeButton", agreebuttonCallBack)
+        await action.setButton("denyButton", denybuttonCallBack)
       }
     } 
     else {
@@ -43,16 +56,3 @@ export function handleMessage(){
     }
   };
 };
-
-export const denybuttonCallBack = async (ctx:Context)=>{
-  await ctx.answerCbQuery();
-  setState("\0");
-  await wallet(ctx);
-  
-}
-
-export const agreebuttonCallBack = async(ctx:Context)=>{
-  await ctx.answerCbQuery();
-  ctx.reply("import private key or mnemonic: ")
-  setState("importWallet")
-}
