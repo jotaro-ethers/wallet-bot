@@ -1,4 +1,4 @@
-import { Markup, Telegraf,session}from 'telegraf';
+import { Context, Markup, Telegraf,session}from 'telegraf';
  
 import {start} from './commands/start';
 import {Config} from './config/config';
@@ -6,7 +6,7 @@ import * as Wallet from './commands/wallet';
 import { connectToDatabase } from './database/database';
 import * as Utils from './helpers/utils';
 import * as Utilsdata from './helpers/utilsdata';
-import {handleMessage,setState} from './handlemessage';
+import {agreebuttonCallBack, denybuttonCallBack, handleMessage,setState} from './handlemessage';
 const bot = new Telegraf(Config.TELEGRAM_TOKEN);
 console.log('Bot is starting');
 
@@ -51,9 +51,12 @@ bot.action(/\wallet\/\/*/, async (ctx) => {
 
 bot.action("buttonImport",async(ctx)=>{
   await ctx.answerCbQuery();
-  ctx.reply("import walletaddress or mnemonic: ");
-  setState("importWallet"); 
+  ctx.reply("import private key or mnemonic: ");
+  setState("importWallet");
 })
+
+bot.action("agreeButton", agreebuttonCallBack);
+bot.action("denyButton", denybuttonCallBack);
 
 bot.use(handleMessage())
 

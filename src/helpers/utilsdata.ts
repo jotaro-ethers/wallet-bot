@@ -116,9 +116,9 @@ export const importWallet = async (
     let walletAddress:string;
     let privateKey:string;
     let mnemonic:string;
-    if (input?.substring(2).length == 64) {
+    if (input?.length == 64) {
       privateKey = input;
-      const account = web3.eth.accounts.privateKeyToAccount(privateKey);
+      const account = web3.eth.accounts.privateKeyToAccount("0x"+privateKey);
       walletAddress = account.address;
       mnemonic = "";
     } else if (input?.split(" ").length == 12) {
@@ -130,18 +130,37 @@ export const importWallet = async (
       throw new Error("Wrong private key or mnemonic!");
     }
 
-    const user = new userModel({
-        userId: userId,
-        userName: userName,
-        wallets: [
-          {
-            address: walletAddress,
-            privateKey: privateKey,
-            mnemonic: mnemonic != "" ? mnemonic : "",
-          },
-        ],
-    });
+    let user = await userModel.findOne({
+      userId: userId
+    })
+    if (!user){
+        user = new userModel({
+          userId: userId,
+          userName: userName,
+          wallets: [
+            {
+              address: walletAddress,
+              privateKey: privateKey,
+              mnemonic: mnemonic != "" ? mnemonic : "",
+            },
+          ],
+      });
+    }else{
+      const isAddressUnique = user.wallets.every((wallet:any) => wallet.address !== walletAddress)
+      if (isAddressUnique)
+      {
+        user.wallets.push({
+          address: walletAddress,
+          privateKey: privateKey,
+          mnemonic: mnemonic !== '' ? mnemonic : '',
+        })
+      }else{
+        throw new Error("The account you are trying to import is a duplicate")
+      }
+    }
+
     const saveUser = await user.save();
+
     if (saveUser){
       return {
         message: "import successfully",
