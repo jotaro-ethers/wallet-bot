@@ -73,7 +73,6 @@ export async function trackWallet(address = "0x1db6Ad727aE60d7b4dBee81f79C4bCbCf
 
         
     };
-    console.log(tokens);
     return {tokens : tokens, totalRemain : totalRemain.toFixed(5)};  
   } catch (error) {
     return {tokens : "", totalRemain : ""};
