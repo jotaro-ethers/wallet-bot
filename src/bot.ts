@@ -28,7 +28,7 @@ bot.action('buttonLink', async (ctx) => {
   await ctx.answerCbQuery();
   const buttonCreate = Markup.button.callback('Create new wallet', 'buttonCreate');
   const buttonImport = Markup.button.callback('Import wallet', 'buttonImport');
-  ctx.reply('Start your crypto journey with a new wallet or import an existing one', Markup.inlineKeyboard([buttonCreate, buttonImport]));
+  ctx.reply('Your chooise ?', Markup.inlineKeyboard([buttonCreate, buttonImport]));
 });
 
 bot.action('buttonCreate', async (ctx) => {
