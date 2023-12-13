@@ -59,18 +59,22 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                     if (AddressS.includes(toAdd as string)){
                         var contract = new NameToken.eth.Contract(Config.ABI, to);
                         var name = await contract.methods.name().call();
+                        var symbol = await contract.methods.symbol().call();
+
                         console.log(from + " send to " + toAdd + " : " + RealValuetransfer+" "+name);
                         var userID: string = await utilsdata.getIDbyaddress(toAdd as string);
                         const telegramID: number = parseFloat(userID);
-                        bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+" "+name+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                        bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
                     } 
                     if (AddressS.includes(from as string)) {
                         var contract = new NameToken.eth.Contract(Config.ABI, to);
                         var name = await contract.methods.name().call();
+                        var symbol = await contract.methods.symbol().call();
+
                         console.log("Your wallet "+from + " send to " + toAdd + " : " + RealValuetransfer+" "+name);
                         var userID: string = await utilsdata.getIDbyaddress(from as string);
                         const telegramID: number = parseFloat(userID);
-                        bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+" "+name+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                        bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
                     }
                 }
                 else{
@@ -129,19 +133,22 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                         if (AddressS.includes(toAdd as string)){
                             var contract = new NameToken.eth.Contract(Config.ABI, to);
                             var name = await contract.methods.name().call();
+                            var symbol = await contract.methods.symbol().call();
                             console.log(from + " send to " + toAdd + " : " + RealValuetransfer + " " + name);
 
                             var userID: string = await utilsdata.getIDbyaddress(toAdd as string);
                             const telegramID: number = parseFloat(userID);
-                            bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+" "+name+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                            bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
                         } 
                         if (AddressS.includes(from as string)) {
                             var contract = new NameToken.eth.Contract(Config.ABI, to);
                             var name = await contract.methods.name().call();
+                            var symbol = await contract.methods.symbol().call();
+
                             console.log("Your wallet "+from + " send to " + toAdd + " : " + RealValuetransfer+" "+name);
                             var userID: string = await utilsdata.getIDbyaddress(from as string);
                             const telegramID: number = parseFloat(userID);
-                            bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+" "+name+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                            bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
                         }
                     }
                     else{
