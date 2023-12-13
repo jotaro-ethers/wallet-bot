@@ -1,15 +1,14 @@
 import { promisify } from 'util';
 const delay = promisify(setTimeout);
-import * as utilsdata from './helpers/utilsdata';
-
-import { connectToDatabase } from './database/database'; 
+import * as utilsdata from './utilsdata';
+import { connectToDatabase } from '../database/database';
 import {Telegraf}from 'telegraf';
 
-import {Config} from './config/config';
+import {Config} from '../config/config';
 import Web3 from 'web3';
 var httpWeb3 = new Web3("https://rpc.testnet.tomochain.com")
 let Block = 0;
-
+const NameToken: Web3 = new Web3(new Web3.providers.HttpProvider("https://rpc.testnet.tomochain.com"));
 const bot = new Telegraf(Config.TELEGRAM_TOKEN);
 connectToDatabase()
   .then(() => {
@@ -38,6 +37,7 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                 }
 
             }
+            
             for (var i = 0; i < Logtransactions.length; i++) {
                 const to = (Logtransactions[i] as any)?.to;
                 const from = (Logtransactions[i] as any)?.from;
@@ -57,18 +57,20 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                     const RealValuetransfer = Valuetransfer / 10**18;
                     var AddressS: string[] = await utilsdata.getalladdress();
                     if (AddressS.includes(toAdd as string)){
-                        console.log(Logtransactions[i]);
-                        console.log(from + " send to " + toAdd + " : " + RealValuetransfer);
+                        var contract = new NameToken.eth.Contract(Config.ABI, to);
+                        var name = await contract.methods.name().call();
+                        console.log(from + " send to " + toAdd + " : " + RealValuetransfer+" "+name);
                         var userID: string = await utilsdata.getIDbyaddress(toAdd as string);
                         const telegramID: number = parseFloat(userID);
-                        bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                        bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+" "+name+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
                     } 
                     if (AddressS.includes(from as string)) {
-                        console.log(Logtransactions[i])
-                        console.log("Your wallet "+from + " send to " + toAdd + " : " + RealValuetransfer);
+                        var contract = new NameToken.eth.Contract(Config.ABI, to);
+                        var name = await contract.methods.name().call();
+                        console.log("Your wallet "+from + " send to " + toAdd + " : " + RealValuetransfer+" "+name);
                         var userID: string = await utilsdata.getIDbyaddress(from as string);
                         const telegramID: number = parseFloat(userID);
-                        bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                        bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+" "+name+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
                     }
                 }
                 else{
@@ -81,7 +83,6 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                         bot.telegram.sendMessage(telegramID, from + " send to your wallet " + to + " : " + realvalue+" TOMO"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
                     }
                     if (AddressS.includes(from as string)) {
-                        console.log(Logtransactions[i])
                         console.log(from + " send to " + to + " : " + realvalue);
                         var userID: string = await utilsdata.getIDbyaddress(from as string);
                         const telegramID: number = parseFloat(userID);
@@ -113,32 +114,34 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                     const from = (Logtransactions[i] as any)?.from;
                     const value:bigint = (Logtransactions[i] as any)?.value;
                     const realvalue: number = Number(value) / 10**18;
-    
                     const input = (Logtransactions[i] as any)?.input;
                     if(input as string != "0x"){
                         const hexString = input as string;
     
                         var toAdd = hexString.slice(10, 74);
                         var valuetransfer = hexString.slice(74);
-    
                         toAdd = toAdd.replace(/^0+/, '');
                         toAdd = "0x" + toAdd;
                         var Valuetransfer = parseInt(valuetransfer, 16);
                         const RealValuetransfer = Valuetransfer / 10**18;
+
                         var AddressS: string[] = await utilsdata.getalladdress();
                         if (AddressS.includes(toAdd as string)){
-                            console.log(Logtransactions[i]);
-                            console.log(from + " send to " + toAdd + " : " + RealValuetransfer);
+                            var contract = new NameToken.eth.Contract(Config.ABI, to);
+                            var name = await contract.methods.name().call();
+                            console.log(from + " send to " + toAdd + " : " + RealValuetransfer + " " + name);
+
                             var userID: string = await utilsdata.getIDbyaddress(toAdd as string);
                             const telegramID: number = parseFloat(userID);
-                            bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                            bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+" "+name+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
                         } 
                         if (AddressS.includes(from as string)) {
-                            console.log(Logtransactions[i])
-                            console.log("Your wallet "+from + " send to " + toAdd + " : " + RealValuetransfer);
+                            var contract = new NameToken.eth.Contract(Config.ABI, to);
+                            var name = await contract.methods.name().call();
+                            console.log("Your wallet "+from + " send to " + toAdd + " : " + RealValuetransfer+" "+name);
                             var userID: string = await utilsdata.getIDbyaddress(from as string);
                             const telegramID: number = parseFloat(userID);
-                            bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                            bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+" "+name+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
                         }
                     }
                     else{
@@ -151,7 +154,6 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                             bot.telegram.sendMessage(telegramID, from + " send to your wallet " + to + " : " + realvalue+" TOMO"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
                         }
                         if (AddressS.includes(from as string)) {
-                            console.log(Logtransactions[i])
                             console.log(from + " send to " + to + " : " + realvalue);
                             var userID: string = await utilsdata.getIDbyaddress(from as string);
                             const telegramID: number = parseFloat(userID);
