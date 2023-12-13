@@ -48,22 +48,33 @@ export async function trackWallet(address = "0x1db6Ad727aE60d7b4dBee81f79C4bCbCf
       const decimals = element.decimals;
       const balance = Number(tokenBalanceOf.balance)/10**decimals;
       
-      if (balance > 0){
+      if (balance > 0 || element.symbol == "WVIC"){
         tokens.push({
           name: element.name,
           symbol: element.symbol,
-          balance: balance,
-          price: element.price,
-          priceChangePercentage : element.priceChangePercentage,
-          priceChange: element.priceChange,
-          remain : element.price * balance
+          balance: balance.toFixed(5),
+          price: element.price.toFixed(5),
+          priceChangePercentage : element.priceChangePercentage.toFixed(5),
+          priceChange: element.priceChange.toFixed(5),
+          remain : (element.price * balance).toFixed(5)
+          
         });
-        totalRemain += element.price * balance;
-        };
+        totalRemain += (element.price * balance);
+        if (element.symbol == "WVIC"){
+          const nativeBalence = await Utilsdata.getNativeBalance(address);
+          tokens[tokens.length-1].name = "Viction";
+          tokens[tokens.length-1].symbol = "VIC";
+          tokens[tokens.length-1].balance = Number(nativeBalence).toFixed(5);
+          tokens[tokens.length-1].remain = (element.price * Number(nativeBalence)).toFixed(5);
+          totalRemain += (element.price * Number(nativeBalence));
+        }
+        
       };
-    return {tokens : tokens, totalRemain : totalRemain};  
+
+        
+    };
+    return {tokens : tokens, totalRemain : totalRemain.toFixed(5)};  
   } catch (error) {
     return {tokens : "", totalRemain : ""};
   }
-
 }

@@ -4,6 +4,7 @@ import web3 from "../config/connectWallet";
 import abi from "../contract/abi/abi.json";
 import { AbiFragment } from "web3";
 import { Context } from "telegraf";
+import { ethers } from "ethers";
 
 export const saveWalletInfo = async (
   userId: number | undefined,
@@ -45,22 +46,16 @@ export const saveWalletInfo = async (
   }
 };
 
-export const getNativeBalance = async (userId: number | undefined) => {
-  const user = await userModel.findOne({
-    userId: userId,
-  });
+export const getNativeBalance = async (address: string | undefined) => {
 
-  if (!user) {
-    throw new Error("User ID is undefined");
-  }
-  const wallet_address = user.wallets[0].address;
-  const balance = await web3.eth.getBalance(wallet_address);
-
+  const balance = await web3.eth.getBalance(address as any);
   return web3.utils.fromWei(balance, "ether");
 };
 
-export const getBalance = async ( user_address: string,token_address: string
-): Promise<{ balance: number }> => {;
+export const getBalance = async (
+  user_address: string,
+  token_address: string
+): Promise<{ balance: number }> => {
   try {
     token_address = token_address?.toLowerCase();
     token_address = web3.utils.toChecksumAddress(String(token_address));
@@ -79,48 +74,109 @@ export const getBalance = async ( user_address: string,token_address: string
   }
 };
 
-
-
 export const deleteWallet = async (
-  userId: number | undefined, address: string | undefined
-
+  userId: number | undefined,
+  address: string | undefined
 ): Promise<void> => {
-
-  try{
+  try {
     const user = await userModel.findOne({ userId: userId });
-  if (user) {
+    if (user) {
       for (var i = 0; i < user.wallets.length; i++) {
-          if (user.wallets[i].address == address) {
-              user.wallets.splice(i, 1);
-              await user.save();
-              
-          }
+        if (user.wallets[i].address == address) {
+          user.wallets.splice(i, 1);
+          await user.save();
+        }
       }
-
-  } else {
+    } else {
       console.log("User not found");
-  }
-  }catch (error) {
+    }
+  } catch (error) {
     console.log("Error deleting wallet info:", error);
   }
-
-  
 };
-export const getalladdress = async (
-  ): Promise<string[]> =>{
-    var AddressS: string[] = [];
-  
-      const user = await userModel.find({ });
-        for (var i = 0; i < user.length; i++){
-          for(var j = 0; j < user[i].wallets.length; j++){
-            AddressS.push(user[i].wallets[j].address.toLowerCase());
-          }
-        }
-    
-    return AddressS
-  
+export const getalladdress = async (): Promise<string[]> => {
+  var AddressS: string[] = [];
+
+  const user = await userModel.find({});
+  for (var i = 0; i < user.length; i++) {
+    for (var j = 0; j < user[i].wallets.length; j++) {
+      AddressS.push(user[i].wallets[j].address.toLowerCase());
+    }
   }
-  
+  return AddressS;
+};
+
+export const importWallet = async (
+  input: string | undefined,
+  userId: number | undefined,
+  userName: string | undefined
+):Promise<{message:string, err:Error | null}> => {
+  try {
+    input = input?.trim();
+    let walletAddress:string;
+    let privateKey:string;
+    let mnemonic:string;
+    if (input?.length == 64) {
+      privateKey = input;
+      const account = web3.eth.accounts.privateKeyToAccount("0x"+privateKey);
+      walletAddress = account.address;
+      mnemonic = "";
+    } else if (input?.split(" ").length == 12) {
+      mnemonic = input;
+      const mnemonicWallet = ethers.Wallet.fromPhrase(String(mnemonic));
+      privateKey = mnemonicWallet.privateKey;
+      walletAddress = mnemonicWallet.address;
+    } else {
+      throw new Error("Wrong private key or mnemonic!");
+    }
+
+    let user = await userModel.findOne({
+      userId: userId
+    })
+    if (!user){
+        user = new userModel({
+          userId: userId,
+          userName: userName,
+          wallets: [
+            {
+              address: walletAddress,
+              privateKey: privateKey,
+              mnemonic: mnemonic != "" ? mnemonic : "",
+            },
+          ],
+      });
+    }else{
+      const isAddressUnique = user.wallets.every((wallet:any) => wallet.address !== walletAddress)
+      if (isAddressUnique)
+      {
+        user.wallets.push({
+          address: walletAddress,
+          privateKey: privateKey,
+          mnemonic: mnemonic !== '' ? mnemonic : '',
+        })
+      }else{
+        throw new Error("The account you are trying to import is a duplicate")
+      }
+    }
+
+    const saveUser = await user.save();
+
+    if (saveUser){
+      return {
+        message: "import successfully",
+        err:null
+      }
+    }
+    else{
+      throw new Error("Fail to save user");
+    }
+  } catch (err:any) {
+    return{
+      message:"Err:",
+      err:err
+    }
+  }
+};
   export const getIDbyaddress = async (address: string
     ): Promise<string> =>{
       var ID: string = "";
