@@ -78,3 +78,6 @@ bot
   .catch((err) => {
     console.error("Error starting bot:", err);
   });
+
+process.once("SIGINT", () => bot.stop("SIGINT"));
+process.once("SIGTERM", () => bot.stop("SIGTERM"));
