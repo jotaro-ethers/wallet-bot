@@ -19,7 +19,7 @@
     "web3": "4.2.2"
   },
   "scripts": {
-    "dev": "nodemon",
+    "dev": "nodemon ./src/bot.ts",
     "start": "ts-node ./src/bot.ts"
   },
   "devDependencies": {
