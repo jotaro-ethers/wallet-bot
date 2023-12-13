@@ -6,9 +6,9 @@ import {Telegraf}from 'telegraf';
 
 import {Config} from '../config/config';
 import Web3 from 'web3';
-var httpWeb3 = new Web3("https://rpc.testnet.tomochain.com")
+var httpWeb3 = new Web3("wss://ws.tomochain.com")
 let Block = 0;
-const NameToken: Web3 = new Web3(new Web3.providers.HttpProvider("https://rpc.testnet.tomochain.com"));
+const NameToken: Web3 = new Web3(new Web3.providers.WebsocketProvider("wss://ws.tomochain.com"));
 const bot = new Telegraf(Config.TELEGRAM_TOKEN);
 connectToDatabase()
   .then(() => {
@@ -23,10 +23,10 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
         const latestBlock = await httpWeb3.eth.getBlockNumber();
         if(Block == 0){
           
-            Block = Number(latestBlock);
+           
             console.log("Present block:"+latestBlock);
             const logs = await httpWeb3.eth.getBlock(latestBlock, true);
-
+            Block = Number(latestBlock);
             var txhash: string[] = []
             const Logtransactions = []
             for(var i= 0; i < logs.transactions.length; i++){
@@ -64,7 +64,7 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                         console.log(from + " send to " + toAdd + " : " + RealValuetransfer+" "+name);
                         var userID: string = await utilsdata.getIDbyaddress(toAdd as string);
                         const telegramID: number = parseFloat(userID);
-                        bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                        bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
                     } 
                     if (AddressS.includes(from as string)) {
                         var contract = new NameToken.eth.Contract(Config.ABI, to);
@@ -74,7 +74,7 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                         console.log("Your wallet "+from + " send to " + toAdd + " : " + RealValuetransfer+" "+name);
                         var userID: string = await utilsdata.getIDbyaddress(from as string);
                         const telegramID: number = parseFloat(userID);
-                        bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                        bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
                     }
                 }
                 else{
@@ -84,14 +84,14 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                         var userID: string = await utilsdata.getIDbyaddress(to as string);
                         const telegramID: number = parseFloat(userID);
                         console.log(telegramID);
-                        bot.telegram.sendMessage(telegramID, from + " send to your wallet " + to + " : " + realvalue+" TOMO"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                        bot.telegram.sendMessage(telegramID, from + " send to your wallet " + to + " : " + realvalue+" VIC"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
                     }
                     if (AddressS.includes(from as string)) {
                         console.log(from + " send to " + to + " : " + realvalue);
                         var userID: string = await utilsdata.getIDbyaddress(from as string);
                         const telegramID: number = parseFloat(userID);
                         console.log(telegramID);
-                        bot.telegram.sendMessage(telegramID,"Your wallet"+ from + " send to  " + to + " : " + realvalue+" TOMO"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                        bot.telegram.sendMessage(telegramID,"Your wallet"+ from + " send to  " + to + " : " + realvalue+" VIC"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
                     }
                 }
               
@@ -138,7 +138,7 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
 
                             var userID: string = await utilsdata.getIDbyaddress(toAdd as string);
                             const telegramID: number = parseFloat(userID);
-                            bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                            bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
                         } 
                         if (AddressS.includes(from as string)) {
                             var contract = new NameToken.eth.Contract(Config.ABI, to);
@@ -148,7 +148,7 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                             console.log("Your wallet "+from + " send to " + toAdd + " : " + RealValuetransfer+" "+name);
                             var userID: string = await utilsdata.getIDbyaddress(from as string);
                             const telegramID: number = parseFloat(userID);
-                            bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                            bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
                         }
                     }
                     else{
@@ -158,21 +158,22 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                             var userID: string = await utilsdata.getIDbyaddress(to as string);
                             const telegramID: number = parseFloat(userID);
                             console.log(telegramID);
-                            bot.telegram.sendMessage(telegramID, from + " send to your wallet " + to + " : " + realvalue+" TOMO"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                            bot.telegram.sendMessage(telegramID, from + " send to your wallet " + to + " : " + realvalue+" VIC"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
                         }
                         if (AddressS.includes(from as string)) {
                             console.log(from + " send to " + to + " : " + realvalue);
                             var userID: string = await utilsdata.getIDbyaddress(from as string);
                             const telegramID: number = parseFloat(userID);
                             console.log(telegramID);
-                            bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to  " + to + " : " + realvalue+" TOMO"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                            bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to  " + to + " : " + realvalue+" VIC"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
                         }
                     }
                   
-                    
+                   
                 }
+                Block = blockcount;
             }
-            Block = Number(latestBlock);
+        
         }
      
         
