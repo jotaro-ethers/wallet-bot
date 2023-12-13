@@ -1,12 +1,16 @@
 import { promisify } from 'util';
 const delay = promisify(setTimeout);
-import axios, { AxiosResponse } from 'axios';
 import * as utilsdata from './helpers/utilsdata';
-import { userModel } from './database/models/user';
+
 import { connectToDatabase } from './database/database'; 
+import {Telegraf}from 'telegraf';
+
+import {Config} from './config/config';
+import Web3 from 'web3';
+var httpWeb3 = new Web3("https://rpc.testnet.tomochain.com")
 let Block = 0;
 
-
+const bot = new Telegraf(Config.TELEGRAM_TOKEN);
 connectToDatabase()
   .then(() => {
   })
@@ -17,74 +21,152 @@ connectToDatabase()
 async function scanLog({ fromBlock }: { fromBlock: number }) {
 
     try {
-        var blockapi = 'https://tomoscan.io/api/block/list?limit=1';
-        const response: AxiosResponse = await axios.get(blockapi);
-       
-        var latestBlock = Number(response.data.total);
-        if (Block == 0) {
+        const latestBlock = await httpWeb3.eth.getBlockNumber();
+        if(Block == 0){
+          
             Block = Number(latestBlock);
-            var apiUrl = 'https://tomoscan.io/api/transaction/listByBlock/';
-            apiUrl = apiUrl + Block
-            console.log(apiUrl);
-            const response: AxiosResponse = await axios.get(apiUrl);
-            if (response.status === 200) {
-                const data = response.data;
-                for (var i = 0; i < data.data.length; i++){
-             
-                  
-                    if(data.data[i].method == "transfer"){
-                        console.log(data.data[i].to);
-                        var AddressS: string[] = await utilsdata.getalladdress();
-                        console.log(AddressS);
-                        if (AddressS.includes(data.data[i].to)) {
-                            console.log("okkkk");
-                          }
-                    }
-                    console.log(data.data[i].method);
-                    
-                    console.log("---------------------");
-                }
-            } else {
-                console.error('Request failed with status:', response.status);
-            }
-        }
-        else{
-            console.log("Lastest scanblock:"+Block);
-            console.log("To Block:"+latestBlock);
-            console.log("Start Scan+++: ");
-            for (var i = Number(Block)+1; i <= Number(latestBlock); i++){
-                var AddressS: string[] = await utilsdata.getalladdress();
-                console.log("Block: ");
-                console.log(i);
-                var apiUrl = 'https://tomoscan.io/api/transaction/listByBlock/';
-                apiUrl = apiUrl + i
-                console.log(apiUrl);
-                const response: AxiosResponse = await axios.get(apiUrl);
-                if (response.status === 200) {
-                    const data = response.data;
-                    for (var z = 0; z < data.data.length; z++){
-                
-                    
-                        if(data.data[z].method == "transfer"){
-                            console.log(data.data[z].to);
-                            
-                            console.log(AddressS);
-                            if (AddressS.includes(data.data[z].to)) {
-                                console.log("okkkk");
-                            }
-                        }
-                        console.log(data.data[z].method);
-                        
-                        console.log("---------------------");
-                    }
-                } else {
-                    console.error('Request failed with status:', response.status);
-                }
-                
-            }
-            Block = Number(latestBlock);
+            console.log("Present block:"+latestBlock);
+            const logs = await httpWeb3.eth.getBlock(latestBlock, true);
 
+            var txhash: string[] = []
+            const Logtransactions = []
+            for(var i= 0; i < logs.transactions.length; i++){
+                var Txhash =(logs.transactions[i] as { hash?: string }).hash?.toString() ?? "";
+                if (!txhash.includes(Txhash)) {
+                    txhash.push(Txhash);
+                    Logtransactions.push(logs.transactions[i]);
+                }
+
+            }
+            for (var i = 0; i < Logtransactions.length; i++) {
+                const to = (Logtransactions[i] as any)?.to;
+                const from = (Logtransactions[i] as any)?.from;
+                const value:bigint = (Logtransactions[i] as any)?.value;
+                const realvalue: number = Number(value) / 10**18;
+
+                const input = (Logtransactions[i] as any)?.input;
+                if(input as string != "0x"){
+                    const hexString = input as string;
+
+                    var toAdd = hexString.slice(10, 74);
+                    var valuetransfer = hexString.slice(74);
+
+                    toAdd = toAdd.replace(/^0+/, '');
+                    toAdd = "0x" + toAdd;
+                    var Valuetransfer = parseInt(valuetransfer, 16);
+                    const RealValuetransfer = Valuetransfer / 10**18;
+                    var AddressS: string[] = await utilsdata.getalladdress();
+                    if (AddressS.includes(toAdd as string)){
+                        console.log(Logtransactions[i]);
+                        console.log(from + " send to " + toAdd + " : " + RealValuetransfer);
+                        var userID: string = await utilsdata.getIDbyaddress(toAdd as string);
+                        const telegramID: number = parseFloat(userID);
+                        bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                    } 
+                    if (AddressS.includes(from as string)) {
+                        console.log(Logtransactions[i])
+                        console.log("Your wallet "+from + " send to " + toAdd + " : " + RealValuetransfer);
+                        var userID: string = await utilsdata.getIDbyaddress(from as string);
+                        const telegramID: number = parseFloat(userID);
+                        bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                    }
+                }
+                else{
+                    var AddressS: string[] = await utilsdata.getalladdress();
+                    if (AddressS.includes(to as string)) {
+                        console.log(from + " send to " + to + " : " + realvalue);
+                        var userID: string = await utilsdata.getIDbyaddress(to as string);
+                        const telegramID: number = parseFloat(userID);
+                        console.log(telegramID);
+                        bot.telegram.sendMessage(telegramID, from + " send to your wallet " + to + " : " + realvalue+" TOMO"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                    }
+                    if (AddressS.includes(from as string)) {
+                        console.log(Logtransactions[i])
+                        console.log(from + " send to " + to + " : " + realvalue);
+                        var userID: string = await utilsdata.getIDbyaddress(from as string);
+                        const telegramID: number = parseFloat(userID);
+                        console.log(telegramID);
+                        bot.telegram.sendMessage(telegramID,"Your wallet"+ from + " send to  " + to + " : " + realvalue+" TOMO"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                    }
+                }
+              
+                
+            }
+          
+        }else{
+            for (var blockcount = Number(Block)+1; blockcount <= Number(latestBlock); blockcount++){
+                console.log("Present block:"+blockcount);
+                const logs = await httpWeb3.eth.getBlock(blockcount, true);
+
+                var txhash: string[] = []
+                const Logtransactions = []
+                for(var i= 0; i < logs.transactions.length; i++){
+                    var Txhash =(logs.transactions[i] as { hash?: string }).hash?.toString() ?? "";
+                    if (!txhash.includes(Txhash)) {
+                        txhash.push(Txhash);
+                        Logtransactions.push(logs.transactions[i]);
+                    }
+
+                }
+                for (var i = 0; i < Logtransactions.length; i++) {
+                    const to = (Logtransactions[i] as any)?.to;
+                    const from = (Logtransactions[i] as any)?.from;
+                    const value:bigint = (Logtransactions[i] as any)?.value;
+                    const realvalue: number = Number(value) / 10**18;
+    
+                    const input = (Logtransactions[i] as any)?.input;
+                    if(input as string != "0x"){
+                        const hexString = input as string;
+    
+                        var toAdd = hexString.slice(10, 74);
+                        var valuetransfer = hexString.slice(74);
+    
+                        toAdd = toAdd.replace(/^0+/, '');
+                        toAdd = "0x" + toAdd;
+                        var Valuetransfer = parseInt(valuetransfer, 16);
+                        const RealValuetransfer = Valuetransfer / 10**18;
+                        var AddressS: string[] = await utilsdata.getalladdress();
+                        if (AddressS.includes(toAdd as string)){
+                            console.log(Logtransactions[i]);
+                            console.log(from + " send to " + toAdd + " : " + RealValuetransfer);
+                            var userID: string = await utilsdata.getIDbyaddress(toAdd as string);
+                            const telegramID: number = parseFloat(userID);
+                            bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                        } 
+                        if (AddressS.includes(from as string)) {
+                            console.log(Logtransactions[i])
+                            console.log("Your wallet "+from + " send to " + toAdd + " : " + RealValuetransfer);
+                            var userID: string = await utilsdata.getIDbyaddress(from as string);
+                            const telegramID: number = parseFloat(userID);
+                            bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                        }
+                    }
+                    else{
+                        var AddressS: string[] = await utilsdata.getalladdress();
+                        if (AddressS.includes(to as string)) {
+                            console.log(from + " send to " + to + " : " + realvalue);
+                            var userID: string = await utilsdata.getIDbyaddress(to as string);
+                            const telegramID: number = parseFloat(userID);
+                            console.log(telegramID);
+                            bot.telegram.sendMessage(telegramID, from + " send to your wallet " + to + " : " + realvalue+" TOMO"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                        }
+                        if (AddressS.includes(from as string)) {
+                            console.log(Logtransactions[i])
+                            console.log(from + " send to " + to + " : " + realvalue);
+                            var userID: string = await utilsdata.getIDbyaddress(from as string);
+                            const telegramID: number = parseFloat(userID);
+                            console.log(telegramID);
+                            bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to  " + to + " : " + realvalue+" TOMO"+'\n'+"View on block explorer : "+"https://scan.testnet.tomochain.com/txs/"+txhash[i]);
+                        }
+                    }
+                  
+                    
+                }
+            }
+            Block = Number(latestBlock);
         }
+     
+        
     } catch (error) {
         console.error('Error in scanLog:', error);
     }
@@ -93,10 +175,9 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
 export async function start() {
     while (true) {
         try {
-            console.log('--------------------------Present Block------------------------------------------');
+            console.log('--------------------------START SCAN------------------------------------------');
             await scanLog({fromBlock:Block});
-           
-            console.log('--------------------------STOP SCAN------------------------------------------');
+            console.log('--------------------------STOP SCAN-------------------------------------------');
             await delay(2000);
         } catch (error) {
             console.error('Error in start:', error);
