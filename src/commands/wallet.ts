@@ -39,8 +39,8 @@ export async function wallet(ctx: Context) {
 }
 
 export async function Delwallet(ctx: Context) {
-  const confirmButton = Markup.button.callback("Confirm","agreeButton")
-  const delineButton = Markup.button.callback("Deny","denyButton")
+  const confirmButton = Markup.button.callback("Confirm","confirmButton")
+  const delineButton = Markup.button.callback("Deny","cancelButton")
   
   const data = (ctx.callbackQuery as any)?.data;
   console.log(data);
@@ -66,8 +66,8 @@ export async function Delwallet(ctx: Context) {
       }
     })
 
-    await action.setButton("agreeButton", agreebuttonCallBack);
-    await action.setButton("denyButton", denybuttonCallBack)
+    await action.setButton("confirmButton", agreebuttonCallBack);
+    await action.setButton("cancelButton", denybuttonCallBack)
 
   } else {
     console.error("Callback query is undefined");
