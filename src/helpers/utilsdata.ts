@@ -100,7 +100,7 @@ export const getalladdress = async (): Promise<string[]> => {
   const user = await userModel.find({});
   for (var i = 0; i < user.length; i++) {
     for (var j = 0; j < user[i].wallets.length; j++) {
-      AddressS.push(user[i].wallets[j].address);
+      AddressS.push(user[i].wallets[j].address.toLowerCase());
     }
   }
   return AddressS;
@@ -177,3 +177,15 @@ export const importWallet = async (
     }
   }
 };
+  export const getIDbyaddress = async (address: string
+    ): Promise<string> =>{
+      var ID: string = "";
+      const user = await userModel.findOne({ wallets: { $elemMatch: { address: address } } });
+      if (user) {
+        ID = user.userId.toString();
+      } else {
+          console.log("User not found");
+      }
+      return ID;
+    }
+    
