@@ -54,11 +54,27 @@ bot.action(/\wallet\/\/*/, async (ctx) => {
 
 bot.action("buttonImport",async(ctx)=>{
   await ctx.answerCbQuery();
-  if ('data' in ctx.callbackQuery){
-    console.log(ctx.callbackQuery.data)
+  const PrivatekeyOrMnemonic = Markup.button.callback("Private key or mnemonic", "PriOrMneButton");
+  const WalletAddress = Markup.button.callback("Wallet address", "WaddressButton");
+  const option_1 = async (ctx:Context)=>{
+    await ctx.answerCbQuery();
+    ctx.reply("import private key or mnemonic: ");
+    setState("importPriorMne");
   }
-  ctx.reply("import private key or mnemonic: ");
-  setState("importWallet");
+
+  const option_2 = async (ctx:Context)=>{
+    await ctx.answerCbQuery();
+    ctx.reply("import your wallet address: ");
+    setState("walletAddress");
+  }
+  await action.setButton("PriOrMneButton", option_1);
+  await action.setButton("WaddressButton", option_2);
+
+  ctx.reply("You can choose your option: ", {
+    reply_markup:{
+      inline_keyboard:[[PrivatekeyOrMnemonic,WalletAddress]]
+    }
+  })
 })
 
 bot.use(handleMessage())

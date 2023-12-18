@@ -188,4 +188,66 @@ export const importWallet = async (
       }
       return ID;
     }
+
+export const ImportWalletAddress = async(
+  wallet_address: string | undefined,
+  userId: number | undefined,
+  userName: string | undefined):Promise<{message: string, err: Error |null}>=>{
+  console.log(userId, userName);
+  
+  try {
+    if (wallet_address?.substring(0,2) != "0x" ){
+      throw new Error("wallet address must start with '0x'")
+    }else{
+      if (wallet_address.substring(2).length != 40 ){
+        throw new Error("incorrect length of wallet address");
+      }
+    }
+
+    let user = await userModel.findOne({
+      userId: userId
+    })
+  
+    if (user){
+      const isAddressUnique = user.wallets.every((wallet:any) => wallet.address !== wallet_address);
+      if (isAddressUnique){
+        user.wallets.push({
+          address: wallet_address,
+          privateKey: "",
+          mnemonic: "",
+        })
+      }else{
+        throw new Error("The wallet you are trying to import is a duplicate")
+      }
+      
+    }else{
+      user = new userModel({
+        userId: userId,
+        userName: userName,
+        wallets: [
+          {
+            address: wallet_address,
+          },
+        ],
+      });
+    }
+  
+    const saveUser = await user.save();
+    if (saveUser){
+      return {
+        message: "import successfully",
+        err:null
+      }
+    }
+    else{
+      throw new Error("Fail to save user");
+    }
+  } catch (error:any) {
+    return {
+      message:"Err:",
+      err: error
+    }    
+  }
     
+
+}
