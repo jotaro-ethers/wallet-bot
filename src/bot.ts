@@ -62,12 +62,12 @@ bot.action("buttonImport", async (ctx) => {
   setState("importWallet");
 });
 
+// handle message other
+bot.use(handleMessage());
+
 // bot transfer
 const transferBotHelper: TransferBotHelper = new TransferBotHelper(bot);
 transferBotHelper.sendTransferOptions();
-
-// handle message other
-bot.use(handleMessage());
 
 // run bot
 bot
