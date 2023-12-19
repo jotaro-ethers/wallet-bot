@@ -11,9 +11,6 @@ export function setState(newState:string) {
 
 export function handleMessage(){
   return async (ctx: Context, next: () => Promise<void>) => {
-
-    const agreeButton = Markup.button.callback("Yes","agreeButton")
-    const delineButton = Markup.button.callback("Deny","denyButton")
     try {
       if (state == "importPriorMne") {
         let MnemonicOrAddress = "";
@@ -29,6 +26,8 @@ export function handleMessage(){
           state = "\0";
         }
         else{
+          const agreeButton = Markup.button.callback("Yes","agreeButton"+MnemonicOrAddress)
+          const delineButton = Markup.button.callback("Deny","denyButton"+MnemonicOrAddress)
           const denybuttonCallBack = async (ctx:Context)=>{
             await ctx.answerCbQuery();
             setState("\0");
@@ -48,8 +47,8 @@ export function handleMessage(){
               inline_keyboard:[[agreeButton, delineButton]]
             },
           });
-          await action.setButton("agreeButton", agreebuttonCallBack)
-          await action.setButton("denyButton", denybuttonCallBack)
+          await action.setButton("agreeButton"+MnemonicOrAddress, agreebuttonCallBack)
+          await action.setButton("denyButton"+MnemonicOrAddress, denybuttonCallBack)
         }
       } 
       else if (state == "walletAddress"){
@@ -63,6 +62,9 @@ export function handleMessage(){
           ctx.telegram.sendAnimation((await ctx.getChat()).id, "https://cdn.dribbble.com/users/11783/screenshots/3492735/animation.gif");
           state = "\0";
         }else{
+          const agreeButton = Markup.button.callback("Yes","agreeButton"+WalletAddress)
+          const delineButton = Markup.button.callback("Deny","denyButton"+WalletAddress)
+
           const denybuttonCallBack = async (ctx:Context)=>{
             await ctx.answerCbQuery();
             setState("\0");
@@ -76,14 +78,16 @@ export function handleMessage(){
           }
   
           state = "\0";
+
           await ctx.reply(err.message)
           await ctx.reply("Would you like to enter again ?", {
             reply_markup:{
               inline_keyboard:[[agreeButton, delineButton]]
             },
           });
-          await action.setButton("agreeButton", agreebuttonCallBack)
-          await action.setButton("denyButton", denybuttonCallBack)
+
+          await action.setButton("agreeButton"+ WalletAddress, agreebuttonCallBack)
+          await action.setButton("denyButton"+ WalletAddress, denybuttonCallBack)
         }
       }
       else {
