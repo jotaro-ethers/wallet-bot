@@ -119,13 +119,13 @@ export const importWallet = async (
     if (input?.length == 64) {
       privateKey = input;
       const account = web3.eth.accounts.privateKeyToAccount("0x"+privateKey);
-      walletAddress = account.address;
+      walletAddress = account.address.toLowerCase();
       mnemonic = "";
     } else if (input?.split(" ").length == 12) {
       mnemonic = input;
       const mnemonicWallet = ethers.Wallet.fromPhrase(String(mnemonic));
       privateKey = mnemonicWallet.privateKey;
-      walletAddress = mnemonicWallet.address;
+      walletAddress = mnemonicWallet.address.toLowerCase();
     } else {
       throw new Error("Wrong private key or mnemonic!");
     }
@@ -196,6 +196,7 @@ export const ImportWalletAddress = async(
   console.log(userId, userName);
   
   try {
+    wallet_address = wallet_address?.toLowerCase();
     if (wallet_address?.substring(0,2) != "0x" ){
       throw new Error("wallet address must start with '0x'")
     }else{
