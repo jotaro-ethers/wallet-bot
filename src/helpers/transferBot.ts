@@ -68,17 +68,17 @@ class TransferBotHelper {
     ];
   }
 
-  private createBtxBackAndCancel(): Object[] {
+  private createBtnBackAndCancel(): Object[] {
     return [
-      Markup.button.callback("<< Back >>", "backBtx"),
+      Markup.button.callback("<< Back >>", "backBtn"),
       Markup.button.callback("<< Cancel transfer >>", "cancelBtn"),
     ];
   }
 
   private createConfirmTransfer(): Object[] {
     return [
-      [Markup.button.callback("Sureeeeee", "sure")],
-      this.createBtxBackAndCancel(),
+      [Markup.button.callback("Sure", "sure")],
+      this.createBtnBackAndCancel(),
     ];
   }
 
@@ -89,19 +89,24 @@ class TransferBotHelper {
         Markup.button.callback("Token", "tokenBtn"),
         Markup.button.callback("Nft", "nftBtn"),
       ],
-      this.createBtxBackAndCancel(),
+      this.createBtnBackAndCancel(),
     ];
   }
 
-  private async createBtxAddressUser(ctx: Context): Promise<any> {
-    const user = await userModel.findOne({ userId: ctx.from?.id }).lean();
+  //!!! error
+  private async createBtnAddressUser(
+    ctx: Context,
+    userId: string = ""
+  ): Promise<any> {
+    userId = userId || (ctx.from?.id as string);
+    const user = await userModel.findOne({ userId: userId }).lean();
     if (user && user.wallets && user.wallets.length > 0) {
       const buttons = [
         user.wallets.map((wallet: any) =>
           Markup.button.callback(wallet.address, `transfer-${wallet.address}`)
         ),
       ];
-      buttons.push(this.createBtxBackAndCancel());
+      buttons.push(this.createBtnBackAndCancel());
       return buttons;
     } else {
       console.log("User not found or no wallets available");
@@ -135,7 +140,7 @@ class TransferBotHelper {
 
       await this.menu(
         "Enter the address you want to transfer",
-        this.createBtxBackAndCancel(),
+        this.createBtnBackAndCancel(),
         "InputAddress",
         ctx
       );
@@ -150,31 +155,55 @@ class TransferBotHelper {
 
       await this.menu(
         "Enter the address you want to transfer",
-        this.createBtxBackAndCancel(),
+        this.createBtnBackAndCancel(),
         "InputAddress",
         ctx
       );
     });
   }
 
+  private async handleCommonButtonAction(
+    ctx: Context,
+    title: string,
+    type: string
+  ): Promise<void> {
+    await ctx.answerCbQuery();
+    const currentAction = this.getCurrentAction();
+    await ctx.deleteMessage(currentAction?.messageId);
+
+    await this.menu(title, this.createBtnBackAndCancel(), type, ctx);
+  }
+
   private handleMenuTypeToken(): void {
     this.#bot.action("nativeBtn", async (ctx: Context) => {
-      await ctx.answerCbQuery();
-      const currentAction = this.getCurrentAction();
-      await ctx.deleteMessage(currentAction?.messageId);
-
       this.#infoTransfer.type = "native";
-
-      this.menu(
+      await this.handleCommonButtonAction(
+        ctx,
         "Enter amount you want to transfer",
-        this.createBtxBackAndCancel(),
-        "InputAmount",
-        ctx
+        "InputAmount"
+      );
+    });
+
+    this.#bot.action("tokenBtn", async (ctx: Context) => {
+      this.#infoTransfer.type = "token";
+      await this.handleCommonButtonAction(
+        ctx,
+        "Enter the address of token you want to transfer",
+        "InputToken"
+      );
+    });
+
+    this.#bot.action("nftBtn", async (ctx: Context) => {
+      this.#infoTransfer.type = "nft";
+      await this.handleCommonButtonAction(
+        ctx,
+        "Enter the address of nft you want to transfer",
+        "InputToken"
       );
     });
   }
 
-  private handleBtxAddressUser(): void {
+  private handleBtnAddressUser(): void {
     this.#bot.action(/transfer-\d+/, async (ctx) => {
       await ctx.answerCbQuery();
 
@@ -206,7 +235,17 @@ class TransferBotHelper {
         switch (currentAction.titleInput) {
           //todo
           case "InputUserName":
-            await ctx.reply("HIHI");
+            await ctx.deleteMessage(currentAction?.messageId);
+            let btn = await this.createBtnAddressUser(ctx);
+
+            let til =
+              btn.length != 0
+                ? `Please select the address of ${ctx.message.text} you want to transfer:`
+                : "Enter the address you want to transfer _user name of telegram not found_";
+            btn = btn.length != 0 ? btn : currentAction?.menu;
+            let tilInput = btn.length != 0 ? undefined : currentAction?.menu;
+
+            await this.menu(til, btn, tilInput, ctx);
             break;
           //todo
           case "InputAddress":
@@ -225,13 +264,30 @@ class TransferBotHelper {
             this.#infoTransfer.amount = userInput;
             // delete message current
             await ctx.deleteMessage(currentAction?.messageId);
-            const button = await this.createBtxAddressUser(ctx);
+            const button = await this.createBtnAddressUser(ctx);
             await this.menu(
               "Please choose address of your to transfer:",
               button,
               undefined,
               ctx
             );
+            break;
+          //todo
+          case "InputToken":
+            this.#infoTransfer.tokenAddr = userInput;
+            // delete message current
+            await ctx.deleteMessage(currentAction?.messageId);
+            const title =
+              this.#infoTransfer.type === "token"
+                ? "Please input amount token:"
+                : "Please input index of NFT:";
+            await this.menu(
+              title,
+              this.createBtnBackAndCancel(),
+              "InputAmount",
+              ctx
+            );
+            break;
           default:
             break;
         }
@@ -252,7 +308,7 @@ class TransferBotHelper {
       this.handleAddrBtn();
       this.handleInputText();
       this.handleMenuTypeToken();
-      this.handleBtxAddressUser();
+      this.handleBtnAddressUser();
 
       this.#bot.action("cancelBtn", async (ctx) => {
         await ctx.answerCbQuery();
@@ -264,7 +320,7 @@ class TransferBotHelper {
         this.#listAction = [];
       });
 
-      this.#bot.action("backBtx", async (ctx) => {
+      this.#bot.action("backBtn", async (ctx) => {
         await ctx.answerCbQuery();
 
         const currentAction = this.getPreviousAction();
