@@ -2,7 +2,7 @@ import { Context, Markup } from "telegraf";
 import { ImportWalletAddress, importWallet } from "./helpers/utilsdata";
 import { createTextChangeRange } from "typescript";
 import { wallet } from "./commands/wallet";
-import {action} from "./bot"
+import {action,bot} from "./bot"
 
 let state:string;
 export function setState(newState:string) {

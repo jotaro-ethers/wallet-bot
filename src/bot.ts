@@ -11,7 +11,7 @@ import * as Wallet from './commands/wallet';
 console.log('Bot is starting');
 const EventEmitter = require('events');
 
-const bot = new Telegraf(Config.TELEGRAM_TOKEN);
+export const bot = new Telegraf(Config.TELEGRAM_TOKEN);
 
 export const action = new Action(bot);
 
@@ -38,7 +38,7 @@ bot.action('buttonLink', async (ctx) => {
 bot.action('buttonCreate', async (ctx) => {
   await ctx.answerCbQuery();
   const walletInfo: Utils.WalletInfo = Utils.generateWalletInfo();
-  ctx.reply(`Your wallet address: ${walletInfo.address}\nYour private key: ${walletInfo.privateKey}\nYour mnemonic: ${walletInfo.mnemonic}`);
+  ctx.replyWithHTML(`✅ Generated new wallet:\n Chain: Viction\n Wallet address: <pre>${walletInfo.address}</pre>\n Private key: <pre>${walletInfo.privateKey}</pre>\n Mnemonic: <pre>${walletInfo.mnemonic}</pre>\n <i>⚠️ Make sure to save this mnemonic phrase OR private key using pen and paper only. Do NOT copy-paste it anywhere. You could also import it to your Metamask/Trust Wallet. After you finish saving/importing the wallet credentials, delete this message. The bot will not display this information again.</i>`)
   await Utilsdata.saveWalletInfo(ctx.from?.id,ctx.from?.username, walletInfo);
 });
 
@@ -55,7 +55,7 @@ bot.action(/\wallet\/\/*/, async (ctx) => {
 bot.action("buttonImport",async(ctx)=>{
   await ctx.answerCbQuery();
   const PrivatekeyOrMnemonic = Markup.button.callback("Private key or mnemonic", "PriOrMneButton");
-  const WalletAddress = Markup.button.callback("Wallet address", "WaddressButton");
+  const WalletAddress = Markup.button.callback("View only", "WaddressButton");
   const option_1 = async (ctx:Context)=>{
     await ctx.answerCbQuery();
     ctx.reply("import private key or mnemonic: ");
@@ -76,7 +76,6 @@ bot.action("buttonImport",async(ctx)=>{
     }
   })
 })
-
 bot.use(handleMessage())
 
 bot.launch().then(() => {

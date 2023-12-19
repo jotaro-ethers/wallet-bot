@@ -22,7 +22,8 @@
   },
   "scripts": {
     "dev": "nodemon",
-    "start": "ts-node ./src/bot.ts"
+    "start": "ts-node ./src/bot.ts",
+    "listen": "ts-node ./src/helpers/listentransfer.ts"
   },
   "devDependencies": {
     "@types/ethereumjs-abi": "^0.6.5",

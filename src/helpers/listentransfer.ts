@@ -64,7 +64,10 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                         console.log(from + " send to " + toAdd + " : " + RealValuetransfer+" "+name);
                         var userID: string = await utilsdata.getIDbyaddress(toAdd as string);
                         const telegramID: number = parseFloat(userID);
-                        bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
+                        const htmlMessage = `Received ${RealValuetransfer} ${name} ($${symbol}) from ${from} \nView on block explorer : https://www.vicscan.xyz/tx/${txhash[i]}`;
+                        const pin = await bot.telegram.sendMessage(telegramID, htmlMessage);
+                        bot.telegram.pinChatMessage(telegramID, pin.message_id);
+                        
                     } 
                     if (AddressS.includes(from as string)) {
                         var contract = new NameToken.eth.Contract(Config.ABI, to);
@@ -74,7 +77,9 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                         console.log("Your wallet "+from + " send to " + toAdd + " : " + RealValuetransfer+" "+name);
                         var userID: string = await utilsdata.getIDbyaddress(from as string);
                         const telegramID: number = parseFloat(userID);
-                        bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
+                        const htmlMessage = `Sent ${RealValuetransfer} ${name} ($${symbol}) from ${from} to ${toAdd} \nView on block explorer : https://www.vicscan.xyz/tx/${txhash[i]}`;
+                        const pin = await bot.telegram.sendMessage(telegramID,htmlMessage);
+                        bot.telegram.pinChatMessage(telegramID, pin.message_id);
                     }
                 }
                 else{
@@ -84,14 +89,18 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                         var userID: string = await utilsdata.getIDbyaddress(to as string);
                         const telegramID: number = parseFloat(userID);
                         console.log(telegramID);
-                        bot.telegram.sendMessage(telegramID, from + " send to your wallet " + to + " : " + realvalue+" VIC"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
+                        const htmlMessage = `Received ${realvalue} Viction ($VIC) from ${from} \nView on block explorer : https://www.vicscan.xyz/tx/${txhash[i]}`;
+                        const pin = await bot.telegram.sendMessage(telegramID,htmlMessage);
+                        bot.telegram.pinChatMessage(telegramID, pin.message_id);
                     }
                     if (AddressS.includes(from as string)) {
                         console.log(from + " send to " + to + " : " + realvalue);
                         var userID: string = await utilsdata.getIDbyaddress(from as string);
                         const telegramID: number = parseFloat(userID);
                         console.log(telegramID);
-                        bot.telegram.sendMessage(telegramID,"Your wallet"+ from + " send to  " + to + " : " + realvalue+" VIC"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
+                        const htmlMessage = `Sent ${realvalue} Viction ($VIC) from ${from} to ${to} \nView on block explorer : https://www.vicscan.xyz/tx/${txhash[i]}`;
+                        const pin = await bot.telegram.sendMessage(telegramID,htmlMessage);
+                        bot.telegram.pinChatMessage(telegramID,pin.message_id);
                     }
                 }
               
@@ -138,7 +147,9 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
 
                             var userID: string = await utilsdata.getIDbyaddress(toAdd as string);
                             const telegramID: number = parseFloat(userID);
-                            bot.telegram.sendMessage(telegramID, from + " send to your wallet " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
+                            const htmlMessage = `Received ${RealValuetransfer} ${name} ($${symbol}) from ${from} \nView on block explorer : https://www.vicscan.xyz/tx/${txhash[i]}`;
+                            const pin = await bot.telegram.sendMessage(telegramID, htmlMessage);
+                            bot.telegram.pinChatMessage(telegramID, pin.message_id);
                         } 
                         if (AddressS.includes(from as string)) {
                             var contract = new NameToken.eth.Contract(Config.ABI, to);
@@ -148,7 +159,9 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                             console.log("Your wallet "+from + " send to " + toAdd + " : " + RealValuetransfer+" "+name);
                             var userID: string = await utilsdata.getIDbyaddress(from as string);
                             const telegramID: number = parseFloat(userID);
-                            bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to " + toAdd + " : " + RealValuetransfer+" "+name+"("+symbol+")"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
+                            const htmlMessage = `Sent ${RealValuetransfer} ${name} ($${symbol}) from ${from} to ${toAdd} \nView on block explorer : https://www.vicscan.xyz/tx/${txhash[i]}`;
+                            const pin = await bot.telegram.sendMessage(telegramID,htmlMessage);
+                            bot.telegram.pinChatMessage(telegramID, pin.message_id);
                         }
                     }
                     else{
@@ -158,14 +171,19 @@ async function scanLog({ fromBlock }: { fromBlock: number }) {
                             var userID: string = await utilsdata.getIDbyaddress(to as string);
                             const telegramID: number = parseFloat(userID);
                             console.log(telegramID);
-                            bot.telegram.sendMessage(telegramID, from + " send to your wallet " + to + " : " + realvalue+" VIC"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
+                            const htmlMessage = `Received ${realvalue} Viction ($VIC) from ${from} \nView on block explorer : https://www.vicscan.xyz/tx/${txhash[i]}`;
+                            const pin = await bot.telegram.sendMessage(telegramID,htmlMessage);
+                            bot.telegram.pinChatMessage(telegramID, pin.message_id);
+                        
                         }
                         if (AddressS.includes(from as string)) {
                             console.log(from + " send to " + to + " : " + realvalue);
                             var userID: string = await utilsdata.getIDbyaddress(from as string);
                             const telegramID: number = parseFloat(userID);
                             console.log(telegramID);
-                            bot.telegram.sendMessage(telegramID,"Your wallet "+ from + " send to  " + to + " : " + realvalue+" VIC"+'\n'+"View on block explorer : "+"https://www.vicscan.xyz/tx/"+txhash[i]);
+                            const htmlMessage = `Sent ${realvalue} Viction ($VIC) from ${from} to ${to} \nView on block explorer : https://www.vicscan.xyz/tx/${txhash[i]}`;
+                            const pin = await bot.telegram.sendMessage(telegramID,htmlMessage);
+                            bot.telegram.pinChatMessage(telegramID,pin.message_id);
                         }
                     }
                   

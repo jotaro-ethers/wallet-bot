@@ -16,9 +16,10 @@ export async function wallet(ctx: Context) {
   const user = await userModel.findOne({ userId: ctx.from?.id });
   if (user) {
     for (var i = 0; i < user.wallets.length; i++) {
+      const displayWallet = user.wallets[i].address.substring(0, 6) + "..." + user.wallets[i].address.substring(user.wallets[i].address.length - 4); 
       var walletButton = [
         Markup.button.callback(
-          user.wallets[i].address,
+          displayWallet,
           "wallet/" + user.wallets[i].address
         ),
         Markup.button.callback("❌", "wallet/del/" + user.wallets[i].address),
@@ -57,10 +58,10 @@ export async function Delwallet(ctx: Context) {
     const agreebuttonCallBack = async(ctx:Context)=>{
       await ctx.answerCbQuery();
       utilsdata.deleteWallet(userId, extractedData);
-      ctx.reply("Deleted wallet: " + extractedData);
+      ctx.reply("✅Disconnected wallet: " + extractedData);
     }  
 
-    await ctx.reply("Do you really want to delete it ?",{
+    await ctx.reply("Do you really want to disconnected it ?",{
       reply_markup:{
         inline_keyboard:[[confirmButton, delineButton]]
       }
