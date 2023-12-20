@@ -100,7 +100,7 @@ export const getalladdress = async (): Promise<string[]> => {
   const user = await userModel.find({});
   for (var i = 0; i < user.length; i++) {
     for (var j = 0; j < user[i].wallets.length; j++) {
-      AddressS.push(user[i].wallets[j].address);
+      AddressS.push(user[i].wallets[j].address.toLowerCase());
     }
   }
   return AddressS;
@@ -116,32 +116,51 @@ export const importWallet = async (
     let walletAddress:string;
     let privateKey:string;
     let mnemonic:string;
-    if (input?.substring(2).length == 64) {
+    if (input?.length == 64) {
       privateKey = input;
-      const account = web3.eth.accounts.privateKeyToAccount(privateKey);
-      walletAddress = account.address;
+      const account = web3.eth.accounts.privateKeyToAccount("0x"+privateKey);
+      walletAddress = account.address.toLowerCase();
       mnemonic = "";
     } else if (input?.split(" ").length == 12) {
       mnemonic = input;
       const mnemonicWallet = ethers.Wallet.fromPhrase(String(mnemonic));
       privateKey = mnemonicWallet.privateKey;
-      walletAddress = mnemonicWallet.address;
+      walletAddress = mnemonicWallet.address.toLowerCase();
     } else {
       throw new Error("Wrong private key or mnemonic!");
     }
 
-    const user = new userModel({
-        userId: userId,
-        userName: userName,
-        wallets: [
-          {
-            address: walletAddress,
-            privateKey: privateKey,
-            mnemonic: mnemonic != "" ? mnemonic : "",
-          },
-        ],
-    });
+    let user = await userModel.findOne({
+      userId: userId
+    })
+    if (!user){
+        user = new userModel({
+          userId: userId,
+          userName: userName,
+          wallets: [
+            {
+              address: walletAddress,
+              privateKey: privateKey,
+              mnemonic: mnemonic != "" ? mnemonic : "",
+            },
+          ],
+      });
+    }else{
+      const isAddressUnique = user.wallets.every((wallet:any) => wallet.address !== walletAddress)
+      if (isAddressUnique)
+      {
+        user.wallets.push({
+          address: walletAddress,
+          privateKey: privateKey,
+          mnemonic: mnemonic !== '' ? mnemonic : '',
+        })
+      }else{
+        throw new Error("The account you are trying to import is a duplicate")
+      }
+    }
+
     const saveUser = await user.save();
+
     if (saveUser){
       return {
         message: "import successfully",
@@ -158,3 +177,78 @@ export const importWallet = async (
     }
   }
 };
+  export const getIDbyaddress = async (address: string
+    ): Promise<string> =>{
+      var ID: string = "";
+      const user = await userModel.findOne({ wallets: { $elemMatch: { address: address } } });
+      if (user) {
+        ID = user.userId.toString();
+      } else {
+          console.log("User not found");
+      }
+      return ID;
+    }
+
+export const ImportWalletAddress = async(
+  wallet_address: string | undefined,
+  userId: number | undefined,
+  userName: string | undefined):Promise<{message: string, err: Error |null}>=>{
+  console.log(userId, userName);
+  
+  try {
+    wallet_address = wallet_address?.toLowerCase();
+    if (wallet_address?.substring(0,2) != "0x" ){
+      throw new Error("wallet address must start with '0x'")
+    }else{
+      if (wallet_address.substring(2).length != 40 ){
+        throw new Error("incorrect length of wallet address");
+      }
+    }
+
+    let user = await userModel.findOne({
+      userId: userId
+    })
+  
+    if (user){
+      const isAddressUnique = user.wallets.every((wallet:any) => wallet.address !== wallet_address);
+      if (isAddressUnique){
+        user.wallets.push({
+          address: wallet_address,
+          privateKey: "",
+          mnemonic: "",
+        })
+      }else{
+        throw new Error("The wallet you are trying to import is a duplicate")
+      }
+      
+    }else{
+      user = new userModel({
+        userId: userId,
+        userName: userName,
+        wallets: [
+          {
+            address: wallet_address,
+          },
+        ],
+      });
+    }
+  
+    const saveUser = await user.save();
+    if (saveUser){
+      return {
+        message: "import successfully",
+        err:null
+      }
+    }
+    else{
+      throw new Error("Fail to save user");
+    }
+  } catch (error:any) {
+    return {
+      message:"Err:",
+      err: error
+    }    
+  }
+    
+
+}

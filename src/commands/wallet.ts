@@ -6,46 +6,76 @@ import * as utils from "../helpers/utils";
 import * as path from "path";
 import dayjs from "dayjs";
 import "dayjs/locale/en";
+import { action } from "../bot";
+
 const assetsFolderPath = path.join(__dirname, "..", "assets");
+let tr = 1;
 export async function wallet(ctx: Context) {
-  if (!utils.timeout(ctx.message?.date as number)) {
-    const buttonLink = Markup.button.callback("Link wallet", "buttonLink");
-    var ButtonsWallets = [[buttonLink]];
-    const user = await userModel.findOne({ userId: ctx.from?.id });
-    if (user) {
-      for (var i = 0; i < user.wallets.length; i++) {
-        var walletButton = [
-          Markup.button.callback(
-            user.wallets[i].address,
-            "wallet/" + user.wallets[i].address
-          ),
-          Markup.button.callback("❌", "wallet/del/" + user.wallets[i].address),
-        ];
-        ButtonsWallets.push(walletButton);
-      }
-      ctx.reply(
-        "Your wallet list here, select the wallet you want to use or link a new one!",
-        Markup.inlineKeyboard(ButtonsWallets)
-      );
-    } else {
-      ctx.reply(
-        "Your wallet list, select the wallet you want to use or link a new one!",
-        Markup.inlineKeyboard(ButtonsWallets)
-      );
-      console.log("User not found");
+  const buttonLink = Markup.button.callback("Link wallet", "buttonLink");
+  var ButtonsWallets = [[buttonLink]];
+  const user = await userModel.findOne({ userId: ctx.from?.id });
+  if (user) {
+    for (var i = 0; i < user.wallets.length; i++) {
+      const displayWallet =
+        user.wallets[i].address.substring(0, 6) +
+        "..." +
+        user.wallets[i].address.substring(user.wallets[i].address.length - 4);
+      var walletButton = [
+        Markup.button.callback(
+          displayWallet,
+          "wallet/" + user.wallets[i].address
+        ),
+        Markup.button.callback("❌", "wallet/del/" + user.wallets[i].address),
+      ];
+      ButtonsWallets.push(walletButton);
     }
+    ctx.reply(
+      "Your wallet list here, select the wallet you want to use or link a new one!",
+      Markup.inlineKeyboard(ButtonsWallets)
+    );
+  } else {
+    ctx.reply(
+      "Your wallet list, select the wallet you want to use or link a new one!",
+      Markup.inlineKeyboard(ButtonsWallets)
+    );
+    console.log("User not found");
   }
 }
 
 export async function Delwallet(ctx: Context) {
   const data = (ctx.callbackQuery as any)?.data;
+  const confirmButton = Markup.button.callback(
+    "Confirm",
+    "confirmButton" + data
+  );
+  const delineButton = Markup.button.callback("Deny", "cancelButton" + data);
+
   console.log(data);
   if (data) {
     const prefix = "wallet/del/";
     const extractedData = data.substring(prefix.length);
     const userId = ctx.from?.id;
-    utilsdata.deleteWallet(userId, extractedData);
-    ctx.reply("Deleted wallet: " + extractedData);
+
+    const denybuttonCallBack = async (ctx: Context) => {
+      await ctx.answerCbQuery();
+      wallet(ctx);
+    };
+
+    const agreebuttonCallBack = async (ctx: Context) => {
+      await ctx.answerCbQuery();
+
+      utilsdata.deleteWallet(userId, extractedData);
+      ctx.reply("✅Disconnected wallet: " + extractedData);
+    };
+
+    await ctx.reply("Do you really want to disconnect it ?", {
+      reply_markup: {
+        inline_keyboard: [[confirmButton, delineButton]],
+      },
+    });
+
+    await action.setButton("confirmButton" + data, agreebuttonCallBack);
+    await action.setButton("cancelButton" + data, denybuttonCallBack);
   } else {
     console.error("Callback query is undefined");
   }

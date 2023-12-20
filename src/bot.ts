@@ -1,18 +1,20 @@
-import { Markup, Telegraf, session } from "telegraf";
-
-import { start } from "./commands/start";
+import { Context, Markup, Telegraf, session } from "telegraf";
 import { Config } from "./config/config";
-import * as Wallet from "./commands/wallet";
+import Action from "./commands/action";
+import { start } from "./commands/start";
 import { connectToDatabase } from "./database/database";
 import * as Utils from "./helpers/utils";
 import * as Utilsdata from "./helpers/utilsdata";
 import { handleMessage, setState } from "./handlemessage";
+import * as Wallet from "./commands/wallet";
 import { TransferBotHelper } from "./helpers/transferBot";
 
-const bot = new Telegraf(Config.TELEGRAM_TOKEN);
 console.log("Bot is starting");
-
 const EventEmitter = require("events");
+const bot = new Telegraf(Config.TELEGRAM_TOKEN);
+
+export const action = new Action(bot);
+
 EventEmitter.defaultMaxListeners = 100;
 connectToDatabase()
   .then(() => {})
@@ -32,7 +34,7 @@ bot.action("buttonLink", async (ctx) => {
   );
   const buttonImport = Markup.button.callback("Import wallet", "buttonImport");
   ctx.reply(
-    "Start your crypto journey with a new wallet or import an existing one",
+    "Your chooise ?",
     Markup.inlineKeyboard([buttonCreate, buttonImport])
   );
 });
@@ -40,8 +42,8 @@ bot.action("buttonLink", async (ctx) => {
 bot.action("buttonCreate", async (ctx) => {
   await ctx.answerCbQuery();
   const walletInfo: Utils.WalletInfo = Utils.generateWalletInfo();
-  ctx.reply(
-    `Your wallet address: ${walletInfo.address}\nYour private key: ${walletInfo.privateKey}\nYour mnemonic: ${walletInfo.mnemonic}`
+  ctx.replyWithHTML(
+    `✅ Generated new wallet:\n Chain: Viction\n Wallet address: <pre>${walletInfo.address}</pre>\n Private key: <pre>${walletInfo.privateKey}</pre>\n Mnemonic: <pre>${walletInfo.mnemonic}</pre>\n <i>⚠️ Make sure to save this mnemonic phrase OR private key using pen and paper only. Do NOT copy-paste it anywhere. You could also import it to your Metamask/Trust Wallet. After you finish saving/importing the wallet credentials, delete this message. The bot will not display this information again.</i>`
   );
   await Utilsdata.saveWalletInfo(ctx.from?.id, ctx.from?.username, walletInfo);
 });
@@ -58,11 +60,31 @@ bot.action(/\wallet\/\/*/, async (ctx) => {
 
 bot.action("buttonImport", async (ctx) => {
   await ctx.answerCbQuery();
-  ctx.reply("import walletaddress or mnemonic: ");
-  setState("importWallet");
-});
+  const PrivatekeyOrMnemonic = Markup.button.callback(
+    "Private key or mnemonic",
+    "PriOrMneButton"
+  );
+  const WalletAddress = Markup.button.callback("View only", "WaddressButton");
+  const option_1 = async (ctx: Context) => {
+    await ctx.answerCbQuery();
+    ctx.reply("import private key or mnemonic: ");
+    setState("importPriorMne");
+  };
 
-// handle message other
+  const option_2 = async (ctx: Context) => {
+    await ctx.answerCbQuery();
+    ctx.reply("import your wallet address: ");
+    setState("walletAddress");
+  };
+  await action.setButton("PriOrMneButton", option_1);
+  await action.setButton("WaddressButton", option_2);
+
+  ctx.reply("You can choose your option: ", {
+    reply_markup: {
+      inline_keyboard: [[PrivatekeyOrMnemonic, WalletAddress]],
+    },
+  });
+});
 bot.use(handleMessage());
 
 // bot transfer
@@ -78,6 +100,5 @@ bot
   .catch((err) => {
     console.error("Error starting bot:", err);
   });
-
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));

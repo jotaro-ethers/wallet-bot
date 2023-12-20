@@ -10,12 +10,14 @@ const UserSchema:Schema = new Schema({
         type:String,
     },
     wallets:[{
-        address:{ type:String},
+        address:{ 
+            type:String,
+            unique:true, 
+        },
         privateKey:{ type:String},
         mnemonic:{ type:String},
         oneidNames:{ type:[String],default:[]},
     }],
-    
 });
 
 export const userModel = mongoose.model("user",UserSchema);

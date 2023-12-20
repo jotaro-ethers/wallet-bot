@@ -20,7 +20,7 @@ export function generateWalletInfo(): WalletInfo {
   const hdNode = ethers.HDNodeWallet.fromSeed(seed);
   const wallet = hdNode.derivePath(`m/44'/60'/0'/0/0`);
   const privateKey = wallet.privateKey;
-  const address = wallet.address;
+  const address = wallet.address.toLowerCase();
 
   return {
     mnemonic,
@@ -34,11 +34,10 @@ export function timeout(ms: number): boolean {
   return timestamp - ms < 60 ? false : true;
 }
 
-export async function trackWallet(address = "0x1db6Ad727aE60d7b4dBee81f79C4bCbCfF8759F8")  {
+export async function trackWallet(address: string)  {
   try {
     var tokens = [];
     var totalRemain = 0;
-    address = "0x0A8484C8e45295d78Eb4D8922690c326A3473bbe"
     const response: AxiosResponse = await axios.get('https://tomoscan.io/api/token/list?offset=0&limit=14');
     const data = response.data.data;
     for (const element of data) {
@@ -73,7 +72,6 @@ export async function trackWallet(address = "0x1db6Ad727aE60d7b4dBee81f79C4bCbCf
 
         
     };
-    console.log(tokens);
     return {tokens : tokens, totalRemain : totalRemain.toFixed(5)};  
   } catch (error) {
     return {tokens : "", totalRemain : ""};
