@@ -1,5 +1,8 @@
 import { Markup, Telegraf, Context } from "telegraf";
 import { userModel } from "../database/models/user";
+import { TransferWalletUtil } from "../utils/transferWallet";
+
+const transferWalletUtil = new TransferWalletUtil();
 
 interface InfTransfer {
   fromAdd: string;
@@ -93,13 +96,12 @@ class TransferBotHelper {
     ];
   }
 
-  //!!! error
   private async createBtnAddressUser(
     ctx: Context,
-    userId: string = ""
+    userName: string | undefined = undefined
   ): Promise<any> {
-    userId = userId || (ctx.from?.id as string);
-    const user = await userModel.findOne({ userId: userId }).lean();
+    let filter = !userName ? { userId: ctx.from?.id } : { userName: userName };
+    const user = await userModel.findOne(filter).lean();
     if (user && user.wallets && user.wallets.length > 0) {
       const buttons = [
         user.wallets.map((wallet: any) =>
@@ -129,7 +131,7 @@ class TransferBotHelper {
       menu: menu,
       titleInput: titleInput,
     });
-    console.log(this.#listAction);
+    // console.log(this.#listAction);
   }
 
   private handleUserNameBtn(): void {
@@ -139,9 +141,9 @@ class TransferBotHelper {
       await ctx.deleteMessage(currentAction?.messageId);
 
       await this.menu(
-        "Enter the address you want to transfer",
+        "Enter the user name of telegram you want to transfer",
         this.createBtnBackAndCancel(),
-        "InputAddress",
+        "InputUserName",
         ctx
       );
     });
@@ -211,18 +213,26 @@ class TransferBotHelper {
       await ctx.deleteMessage(currentAction?.messageId);
 
       const walletId = (ctx.callbackQuery as any)?.data.split("-")[1];
-      await ctx.reply(`Wallet ID: ${walletId}`);
+      if (this.#infoTransfer.toAdd !== "") {
+        await ctx.reply("Information transfer");
+        await ctx.reply(JSON.stringify(this.#infoTransfer));
+      }
 
-      this.#infoTransfer.toAdd === ""
+      const menu =
+        this.#infoTransfer.toAdd === "" && this.#infoTransfer.amount === ""
+          ? this.createTypeToken()
+          : this.createConfirmTransfer();
+
+      const title =
+        this.#infoTransfer.toAdd === "" && this.#infoTransfer.amount === ""
+          ? "Please choose type token for transfer:"
+          : "You sure for transfer ?";
+
+      this.#infoTransfer.toAdd === "" && this.#infoTransfer.amount === ""
         ? (this.#infoTransfer.toAdd = walletId)
         : (this.#infoTransfer.fromAdd = walletId);
 
-      await this.menu(
-        "You sure for transfer ?",
-        this.createConfirmTransfer(),
-        undefined,
-        ctx
-      );
+      await this.menu(title, menu, undefined, ctx);
     });
   }
 
@@ -236,14 +246,16 @@ class TransferBotHelper {
           //todo
           case "InputUserName":
             await ctx.deleteMessage(currentAction?.messageId);
-            let btn = await this.createBtnAddressUser(ctx);
+            let btn = await this.createBtnAddressUser(ctx, userInput);
+            this.getPreviousAction();
 
             let til =
               btn.length != 0
                 ? `Please select the address of ${ctx.message.text} you want to transfer:`
-                : "Enter the address you want to transfer _user name of telegram not found_";
+                : "Enter the user name you want to transfer user name of telegram not found. Please enter again!!!";
+            let tilInput =
+              btn.length != 0 ? undefined : currentAction?.titleInput;
             btn = btn.length != 0 ? btn : currentAction?.menu;
-            let tilInput = btn.length != 0 ? undefined : currentAction?.menu;
 
             await this.menu(til, btn, tilInput, ctx);
             break;
@@ -295,6 +307,17 @@ class TransferBotHelper {
     });
   }
 
+  private delValue(): void {
+    this.#infoTransfer = {
+      fromAdd: "",
+      toAdd: "",
+      amount: "",
+      tokenAddr: "",
+      type: "",
+    };
+    this.#listAction = [];
+  }
+
   sendTransferOptions(): void {
     this.#bot.command("transfer", async (ctx) => {
       this.menu(
@@ -317,7 +340,7 @@ class TransferBotHelper {
 
         await ctx.reply("Cancel transfer success");
 
-        this.#listAction = [];
+        this.delValue();
       });
 
       this.#bot.action("backBtn", async (ctx) => {
@@ -341,9 +364,22 @@ class TransferBotHelper {
 
         const currentAction = this.getPreviousAction();
         await ctx.deleteMessage(currentAction?.messageId);
-        this.#listAction = [];
 
         await ctx.reply("Wait for transfer");
+
+        const { fromAdd, toAdd, tokenAddr, amount, type } = this.#infoTransfer;
+        const result = await transferWalletUtil.transfer(
+          fromAdd,
+          toAdd,
+          tokenAddr,
+          amount,
+          type
+        );
+
+        ctx.replyWithMarkdown(`\`\`\`json\n${JSON.stringify(result)}\n\`\`\``);
+        // ctx.replyWithHTML(`<pre>${result}</pre>`);
+
+        this.delValue();
       });
     });
   }
