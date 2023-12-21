@@ -1,6 +1,7 @@
 import { Markup, Telegraf, Context } from "telegraf";
 import { userModel } from "../database/models/user";
 import { TransferWalletUtil } from "../utils/transferWallet";
+import { assert } from "console";
 
 const transferWalletUtil = new TransferWalletUtil();
 
@@ -213,10 +214,6 @@ class TransferBotHelper {
       await ctx.deleteMessage(currentAction?.messageId);
 
       const walletId = (ctx.callbackQuery as any)?.data.split("-")[1];
-      if (this.#infoTransfer.toAdd !== "") {
-        await ctx.reply("Information transfer");
-        await ctx.reply(JSON.stringify(this.#infoTransfer));
-      }
 
       const menu =
         this.#infoTransfer.toAdd === "" && this.#infoTransfer.amount === ""
@@ -231,6 +228,11 @@ class TransferBotHelper {
       this.#infoTransfer.toAdd === "" && this.#infoTransfer.amount === ""
         ? (this.#infoTransfer.toAdd = walletId)
         : (this.#infoTransfer.fromAdd = walletId);
+
+      if (this.#infoTransfer.fromAdd !== "") {
+        await ctx.reply("Information transfer");
+        await ctx.reply(JSON.stringify(this.#infoTransfer));
+      }
 
       await this.menu(title, menu, undefined, ctx);
     });
@@ -367,6 +369,7 @@ class TransferBotHelper {
 
         await ctx.reply("Wait for transfer");
 
+        console.log(this.#infoTransfer);
         const { fromAdd, toAdd, tokenAddr, amount, type } = this.#infoTransfer;
         const result = await transferWalletUtil.transfer(
           fromAdd,
