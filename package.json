@@ -22,7 +22,7 @@
   },
   "scripts": {
     "dev": "nodemon",
-    "start": "ts-node ./src/bot.ts",
+    "start": "nodemon ./src/bot.ts",
     "listen": "ts-node ./src/helpers/listentransfer.ts"
   },
   "devDependencies": {

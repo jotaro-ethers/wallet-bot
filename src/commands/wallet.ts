@@ -42,15 +42,15 @@ export async function wallet(ctx: Context) {
 export async function Delwallet(ctx: Context) {
   
   const data = (ctx.callbackQuery as any)?.data;
-  const confirmButton = Markup.button.callback("Confirm","confirmButton" + data)
-  const delineButton = Markup.button.callback("Deny","cancelButton"+ data)
+  
   
   console.log(data);
   if (data) {
     const prefix = "wallet/del/";
     const extractedData = data.substring(prefix.length);
     const userId = ctx.from?.id;
-
+    const confirmButton = Markup.button.callback("Confirm","confirmButton" + extractedData)
+    const delineButton = Markup.button.callback("Deny","cancelButton"+ extractedData)
     const denybuttonCallBack = async (ctx:Context)=>{
       await ctx.answerCbQuery();
       wallet(ctx);
@@ -69,8 +69,8 @@ export async function Delwallet(ctx: Context) {
       }
     })
 
-    await action.setButton("confirmButton" + data, agreebuttonCallBack);
-    await action.setButton("cancelButton" + data, denybuttonCallBack);
+    await action.setButton("confirmButton" + extractedData, agreebuttonCallBack);
+    await action.setButton("cancelButton" + extractedData, denybuttonCallBack);
 
   } else {
     console.error("Callback query is undefined");
