@@ -6,7 +6,7 @@ import * as utils from "../helpers/utils";
 import * as path from "path";
 import dayjs from "dayjs";
 import "dayjs/locale/en";
-import {action} from "../bot"
+import { action } from "../bot";
 
 const assetsFolderPath = path.join(__dirname, "..", "assets");
 let tr = 1;
@@ -16,7 +16,10 @@ export async function wallet(ctx: Context) {
   const user = await userModel.findOne({ userId: ctx.from?.id });
   if (user) {
     for (var i = 0; i < user.wallets.length; i++) {
-      const displayWallet = user.wallets[i].address.substring(0, 6) + "..." + user.wallets[i].address.substring(user.wallets[i].address.length - 4); 
+      const displayWallet =
+        user.wallets[i].address.substring(0, 6) +
+        "..." +
+        user.wallets[i].address.substring(user.wallets[i].address.length - 4);
       var walletButton = [
         Markup.button.callback(
           displayWallet,
@@ -40,38 +43,39 @@ export async function wallet(ctx: Context) {
 }
 
 export async function Delwallet(ctx: Context) {
-  
   const data = (ctx.callbackQuery as any)?.data;
-  
-  
+  const confirmButton = Markup.button.callback(
+    "Confirm",
+    "confirmButton" + data
+  );
+  const delineButton = Markup.button.callback("Deny", "cancelButton" + data);
+
   console.log(data);
   if (data) {
     const prefix = "wallet/del/";
     const extractedData = data.substring(prefix.length);
     const userId = ctx.from?.id;
-    const confirmButton = Markup.button.callback("Confirm","confirmButton" + extractedData)
-    const delineButton = Markup.button.callback("Deny","cancelButton"+ extractedData)
-    const denybuttonCallBack = async (ctx:Context)=>{
+
+    const denybuttonCallBack = async (ctx: Context) => {
       await ctx.answerCbQuery();
       wallet(ctx);
-    }
+    };
 
-    const agreebuttonCallBack = async(ctx:Context)=>{
+    const agreebuttonCallBack = async (ctx: Context) => {
       await ctx.answerCbQuery();
-     
+
       utilsdata.deleteWallet(userId, extractedData);
       ctx.reply("✅Disconnected wallet: " + extractedData);
-    }  
+    };
 
-    await ctx.reply("Do you really want to disconnect it ?",{
-      reply_markup:{
-        inline_keyboard:[[confirmButton, delineButton]]
-      }
-    })
+    await ctx.reply("Do you really want to disconnect it ?", {
+      reply_markup: {
+        inline_keyboard: [[confirmButton, delineButton]],
+      },
+    });
 
-    await action.setButton("confirmButton" + extractedData, agreebuttonCallBack);
-    await action.setButton("cancelButton" + extractedData, denybuttonCallBack);
-
+    await action.setButton("confirmButton" + data, agreebuttonCallBack);
+    await action.setButton("cancelButton" + data, denybuttonCallBack);
   } else {
     console.error("Callback query is undefined");
   }
